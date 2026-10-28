@@ -26,14 +26,18 @@
   --good-soft: #d9f0e2;
   --warn: #a5560a;
   --warn-soft: #f8e6d2;
-  --card: #fdfdfb;
-  --card-edge: #cdd3dc;
+  --card: #f6f7f9;
+  --card-top: #ffffff;
+  --card-edge: #d3d9e1;
+  --card-inner: rgba(30, 45, 70, .06);
+  --card-shadow: 0 1px 1px rgba(20, 32, 54, .06), 0 6px 16px -8px rgba(20, 32, 54, .28);
   --ink-red: #c22d38;
   --ink-black: #1a1f27;
   --shadow: 0 1px 2px rgba(20, 32, 54, .10), 0 4px 14px rgba(20, 32, 54, .08);
   --scrim: rgba(14, 20, 30, .55);
   --accent-tint: rgba(31, 91, 200, .07);
   --fire: #e8590c; --fire-soft: rgba(255, 112, 26, .45); --fire-tint: rgba(255, 140, 50, .10);
+  --flame-core: #fff3b0; --flame-mid: #ffb02e; --flame-edge: rgba(240, 80, 20, .85);
   --bad: #cc2f3a; --bad-soft: #f9dcdd; --bad-glow: rgba(214, 48, 60, .35); --good-glow: rgba(29, 127, 72, .35);
   --felt: #d9e2ef; --felt-hi: #eef3fa; --felt-rim: #c9d5e6;  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
@@ -43,10 +47,12 @@
     --bg: #10151c; --surface: #19202a; --surface-2: #222b37; --fg: #e7ecf3; --muted: #98a4b5;
     --line: #2d3846; --accent: #6b9dff; --accent-soft: #1d2d4a; --accent-fg: #0a1222;
     --good: #5fd08f; --good-soft: #163527; --warn: #f0a35a; --warn-soft: #3b2814;
-    --card: #eef0f3; --card-edge: #9aa3b0; --ink-red: #c22d38; --ink-black: #1a1f27;
+    --card: #e6e9ee; --card-top: #f7f8fa; --card-edge: #aab2be; --card-inner: rgba(30, 45, 70, .07); --ink-red: #c22d38; --ink-black: #1a1f27;
+    --card-shadow: 0 1px 1px rgba(0, 0, 0, .3), 0 8px 18px -8px rgba(0, 0, 0, .6);
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); --scrim: rgba(4, 7, 12, .7);
     --accent-tint: rgba(31, 91, 200, .10);
     --fire: #ff8a3d; --fire-soft: rgba(255, 128, 40, .42); --fire-tint: rgba(255, 128, 40, .12);
+    --flame-core: #fff6c4; --flame-mid: #ffa62b; --flame-edge: rgba(255, 84, 24, .9);
     --bad: #ff6b72; --bad-soft: #3d1a1d; --bad-glow: rgba(255, 90, 100, .38); --good-glow: rgba(95, 208, 143, .32);
     --felt: #18212d; --felt-hi: #253246; --felt-rim: #1d2836;    color-scheme: dark;
   }
@@ -55,10 +61,12 @@
   --bg: #10151c; --surface: #19202a; --surface-2: #222b37; --fg: #e7ecf3; --muted: #98a4b5;
   --line: #2d3846; --accent: #6b9dff; --accent-soft: #1d2d4a; --accent-fg: #0a1222;
   --good: #5fd08f; --good-soft: #163527; --warn: #f0a35a; --warn-soft: #3b2814;
-  --card: #eef0f3; --card-edge: #9aa3b0; --ink-red: #c22d38; --ink-black: #1a1f27;
+  --card: #e6e9ee; --card-top: #f7f8fa; --card-edge: #aab2be; --card-inner: rgba(30, 45, 70, .07); --ink-red: #c22d38; --ink-black: #1a1f27;
+    --card-shadow: 0 1px 1px rgba(0, 0, 0, .3), 0 8px 18px -8px rgba(0, 0, 0, .6);
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); --scrim: rgba(4, 7, 12, .7);
     --accent-tint: rgba(31, 91, 200, .10);
     --fire: #ff8a3d; --fire-soft: rgba(255, 128, 40, .42); --fire-tint: rgba(255, 128, 40, .12);
+    --flame-core: #fff6c4; --flame-mid: #ffa62b; --flame-edge: rgba(255, 84, 24, .9);
     --bad: #ff6b72; --bad-soft: #3d1a1d; --bad-glow: rgba(255, 90, 100, .38); --good-glow: rgba(95, 208, 143, .32);
     --felt: #18212d; --felt-hi: #253246; --felt-rim: #1d2836;  color-scheme: dark;
 }
@@ -214,6 +222,15 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .tcard .card.trumpcard { background: linear-gradient(var(--accent-tint), var(--accent-tint)), var(--card); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
 .tcard .card.trumpcard::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 6px; height: 3px; border-radius: 2px; background: var(--accent); }
 .tcard.win { z-index: 3; }
+.tcard.flown:not(.collect) { animation: none; }
+/* Plates glide to new seats when the bottom player changes (hotseat) instead of jumping */
+.plate, .flames { transition: left .45s cubic-bezier(.2, .8, .2, 1), top .45s cubic-bezier(.2, .8, .2, 1), border-color .25s ease, background-color .25s ease; }
+/* Pop-ups fade in; their panel eases up */
+.overlay { animation: ovIn .2s ease-out both; }
+.overlay > .modal, .overlay > .cover-inner { animation: panelIn .26s cubic-bezier(.2, .9, .3, 1.1) both; }
+@keyframes ovIn { from { opacity: 0; } }
+@keyframes panelIn { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+.bidbtn, .btn, .opt { transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease, opacity .15s ease; }
 .tablewrap.many .tcard .card { --w: 56px; }
 /* Trick won: the winning card pops and the winner's plate glows once */
 .tcard.win .card { animation: winPop .45s cubic-bezier(.2, 1.5, .4, 1) both; }
@@ -227,9 +244,27 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
   from { box-shadow: 0 0 0 2px var(--fire), 0 -2px 12px 1px var(--fire-soft), var(--shadow); }
   to { box-shadow: 0 0 0 2px var(--fire), 0 -6px 26px 6px var(--fire-soft), var(--shadow); }
 }
-.fire-badge { flex: none; display: inline-flex; align-items: center; gap: 2px; font-weight: 800; font-size: 13px; color: var(--fire); font-variant-numeric: tabular-nums; }
-.fire-badge .flame { display: inline-block; transform-origin: 50% 90%; animation: flicker .6s ease-in-out infinite alternate; }
-@keyframes flicker { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.18) rotate(5deg); } }
+/* Flames: flickering tongues rising from behind the plate's top edge and sides */
+.flames { position: absolute; z-index: 3; width: 230px; height: 84px; transform: translate(-50%, -50%); pointer-events: none; filter: blur(.6px); }
+.flames i { position: absolute; bottom: 44%; width: 26px; height: 46px; margin-left: -13px; border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
+  background: radial-gradient(ellipse at 50% 85%, var(--flame-core) 0 18%, var(--flame-mid) 42%, var(--flame-edge) 68%, transparent 72%);
+  transform-origin: 50% 100%; opacity: .9; animation: flameLick var(--d, .7s) ease-in-out infinite alternate; animation-delay: var(--dl, 0s); }
+.flames i:nth-child(1) { left: 6%; bottom: 20%; height: 34px; --d: .62s; --dl: -.1s; rotate: -28deg; }
+.flames i:nth-child(2) { left: 15%; height: 40px; --d: .74s; --dl: -.4s; }
+.flames i:nth-child(3) { left: 25%; height: 52px; --d: .58s; --dl: -.2s; }
+.flames i:nth-child(4) { left: 35%; height: 44px; --d: .81s; --dl: -.6s; }
+.flames i:nth-child(5) { left: 45%; height: 58px; --d: .66s; --dl: -.3s; }
+.flames i:nth-child(6) { left: 55%; height: 48px; --d: .72s; --dl: -.5s; }
+.flames i:nth-child(7) { left: 65%; height: 56px; --d: .6s; --dl: -.15s; }
+.flames i:nth-child(8) { left: 75%; height: 42px; --d: .78s; --dl: -.45s; }
+.flames i:nth-child(9) { left: 85%; height: 38px; --d: .64s; --dl: -.25s; }
+.flames i:nth-child(10) { left: 94%; bottom: 20%; height: 34px; --d: .7s; --dl: -.55s; rotate: 28deg; }
+.flames i:nth-child(11) { left: 50%; bottom: 30%; width: 180px; margin-left: -90px; height: 30px; border-radius: 50%; --d: .9s; opacity: .55; }
+@keyframes flameLick {
+  0% { transform: translateY(2px) scaleY(.82) scaleX(1.05); opacity: .75; }
+  50% { transform: translateY(-3px) scaleY(1.18) scaleX(.9); opacity: 1; }
+  100% { transform: translateY(-1px) scaleY(.95) scaleX(1); opacity: .85; }
+}
 /* Round result: green glow for an exact bid, red for a miss */
 .plate.res-made { border-color: var(--good); animation: resMade 1.6s ease-out both; }
 .plate.res-miss { border-color: var(--bad); animation: resMiss 1.6s ease-out both; }
@@ -247,7 +282,7 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 @keyframes bubble { 0% { opacity: 0; transform: translateX(-50%) scale(.6); } 12% { opacity: 1; transform: translateX(-50%) scale(1.08); } 20% { transform: translateX(-50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
 /* Dealing: card backs fly from the centre to each seat in dealing order */
 .dealcard { position: absolute; left: 50%; top: 50%; width: 38px; height: 54px; border-radius: 5px; z-index: 5; pointer-events: none;
-  background: repeating-linear-gradient(45deg, var(--accent) 0 4px, var(--accent-soft) 4px 8px); border: 2px solid var(--card); box-shadow: var(--shadow);
+  background: linear-gradient(135deg, rgba(255, 255, 255, .22), transparent 45%), var(--accent); border: 2px solid var(--card-top); outline: 1px solid rgba(255, 255, 255, .35); outline-offset: -5px; box-shadow: var(--card-shadow);
   transform: translate(-50%, -50%); animation: dealFly .45s cubic-bezier(.3, .6, .3, 1) both; }
 @keyframes dealFly { 0% { left: 50%; top: 50%; opacity: 0; transform: translate(-50%, -50%) rotate(-20deg) scale(.8); } 15% { opacity: 1; } 85% { opacity: 1; } 100% { left: var(--x); top: var(--y); opacity: 0; transform: translate(-50%, -50%) rotate(0deg) scale(.9); } }
 .dealt-in { animation: handIn .3s ease-out both; }
@@ -268,7 +303,8 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .seat-name { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; background: var(--surface-2); color: var(--muted); flex: none; }
 .chip.accent { background: var(--accent-soft); color: var(--accent); }
-@media (prefers-reduced-motion: reduce) { .tcard, .tcard.collect, .tcard.win .card, .plate.won, .plate.fire, .dealt-in, .fire-badge .flame { animation: none; }
+@media (prefers-reduced-motion: reduce) { .tcard, .tcard.collect, .tcard.win .card, .plate.won, .plate.fire, .dealt-in, .flames i, .overlay, .overlay > .modal, .overlay > .cover-inner { animation: none; }
+  .plate, .flames { transition: none; }
   .plate.res-made { animation: none; box-shadow: 0 0 0 2px var(--good), 0 0 16px 3px var(--good-glow), var(--shadow); }
   .plate.res-miss { animation: none; box-shadow: 0 0 0 2px var(--bad), 0 0 16px 3px var(--bad-glow), var(--shadow); } .dealcard { display: none; } .plate.fire { box-shadow: 0 0 0 2px var(--fire), 0 -4px 18px 3px var(--fire-soft), var(--shadow); } }
 .table-status { font-weight: 700; font-size: 17px; text-align: center; }
@@ -282,13 +318,20 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .played.win .who { color: var(--accent); }
 
 /* Cards */
-.card { --w: 66px; display: inline-block; vertical-align: top; width: var(--w); height: calc(var(--w) * 1.42); border-radius: 7px; background: var(--card); border: 1px solid var(--card-edge); color: var(--ink-black); position: relative; flex: none; box-shadow: var(--shadow); font-family: var(--body); user-select: none; padding: 0; transition: transform .12s ease, box-shadow .12s ease, opacity .12s; }
+/* Card face: a soft white gradient, hairline edge, a crisp display-face rank in two corners and a quiet centre pip */
+.card { --w: 66px; display: inline-block; vertical-align: top; width: var(--w); height: calc(var(--w) * 1.4); border-radius: calc(var(--w) * .11);
+  background: linear-gradient(180deg, var(--card-top), var(--card)); border: 1px solid var(--card-edge); color: var(--ink-black);
+  position: relative; flex: none; box-shadow: var(--card-shadow); font-family: var(--display); user-select: none; padding: 0; overflow: hidden;
+  transition: transform .18s cubic-bezier(.2, .8, .2, 1), box-shadow .18s ease, opacity .18s ease; }
+.card::before { content: ""; position: absolute; inset: 3px; border-radius: calc(var(--w) * .08); border: 1px solid var(--card-inner); pointer-events: none; }
 .card.red { color: var(--ink-red); }
-.card .cr { position: absolute; top: 4px; left: 6px; font-weight: 700; font-size: calc(var(--w) * .27); line-height: 1; display: flex; flex-direction: column; align-items: center; }
-.card .cr small { font-size: .8em; }
-.card .cs { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--w) * .52); padding-top: 14%; }
+.card .cr { position: absolute; top: calc(var(--w) * .07); left: calc(var(--w) * .09); font-weight: 800; font-size: calc(var(--w) * .25); line-height: .95; letter-spacing: -.03em; display: flex; flex-direction: column; align-items: center; }
+.card .cr small { font-size: .72em; margin-top: 1px; }
+.card .cr.cr2 { top: auto; left: auto; bottom: calc(var(--w) * .07); right: calc(var(--w) * .09); rotate: 180deg; }
+.card .cs { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--w) * .44); opacity: .92; }
 .card.sm { --w: 40px; }
-.card.sm .cr { top: 2px; left: 3px; }
+.card.sm .cr2, .card.sm::before { display: none; }
+.card.sm .cs { font-size: calc(var(--w) * .4); padding-top: 22%; }
 .card.lg { --w: 84px; }
 .hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .hand .card { cursor: pointer; }
@@ -377,6 +420,7 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 </style>
 
 <div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/morphdom@2.7.4/dist/morphdom-umd.min.js"></script>
 
 <script>
 /* ============ ENGINE START (pure rules, no DOM) ============ */
@@ -807,9 +851,10 @@ const cardText = (c) => rankLabel(Engine.rank(c)) + SYM[Engine.suit(c)];
 function cardHTML(c, opts = {}) {
   const s = Engine.suit(c), r = Engine.rank(c);
   const cls = ['card', isRed(s) ? 'red' : '', opts.size || '', opts.cls || ''].join(' ');
-  const inner = `<span class="cr">${rankLabel(r)}<small>${SYM[s]}</small></span><span class="cs" aria-hidden="true">${SYM[s]}</span>`;
+  const corner = `${rankLabel(r)}<small>${SYM[s]}</small>`;
+  const inner = `<span class="cr">${corner}</span><span class="cs" aria-hidden="true">${SYM[s]}</span><span class="cr cr2" aria-hidden="true">${corner}</span>`;
   const label = `${rankLabel(r)} ${TEXT[lang].suits[s]}`;
-  const style = opts.style ? ` style="${opts.style}"` : '';
+  const style = (opts.style ? ` style="${opts.style}"` : '') + (opts.id ? ` id="${opts.id}"` : '') + (opts.anim ? ` data-anim="${opts.anim}"` : '');
   if (opts.button) return `<button class="${cls}" data-a="card" data-id="${c}" ${opts.disabled ? 'disabled' : ''} aria-label="${esc(label)}"${style}>${inner}</button>`;
   return `<span class="${cls}" role="img" aria-label="${esc(label)}"${style}>${inner}</span>`;
 }
@@ -945,7 +990,7 @@ function dealLayer(r, n, anchor) {
   for (let k = 0; k < total; k++) {
     const seat = (r.dealer + 1 + (k % n)) % n;
     const p = seatPos(seat, n, anchor, 0.95);
-    html += `<span class="dealcard" style="--x:${p.x}%;--y:${p.y}%;animation-delay:${Math.round(k * step - elapsed)}ms"></span>`;
+    html += `<span class="dealcard" id="dc-${k}" data-anim="deal${at}" style="--x:${p.x}%;--y:${p.y}%;animation-delay:${Math.round(k * step - elapsed)}ms"></span>`;
   }
   return html;
 }
@@ -980,18 +1025,19 @@ function tableScene() {
       + (r.dealer === i ? `<span class="chip">${t('dealer')}</span>` : '');
     const won = r.phase === 'trickDone' && r.trickWinner === i;
     const streak = game.streak && game.streak.p === i && game.streak.n >= 3 ? game.streak.n : 0;
-    const fireBadge = streak ? `<span class="fire-badge" title="${esc(t('onFire', { n: streak }))}"><span class="flame" aria-hidden="true">🔥</span> ${streak}</span>` : '';
     const bub = ui.bidBubbles[i];
     const bubble = bub && Date.now() - bub.at < BUBBLE_MS
-      ? `<span class="bid-bubble ${p.y < 50 ? 'below' : ''}" style="animation-delay:${-(Date.now() - bub.at)}ms">${t('bid')} <b>${bub.v}</b></span>` : '';
+      ? `<span class="bid-bubble ${p.y < 50 ? 'below' : ''}" data-anim="bb${bub.at}" style="animation-delay:${-(Date.now() - bub.at)}ms">${t('bid')} <b>${bub.v}</b></span>` : '';
     // Round just ended: green if the bid was hit exactly, red if missed, with the round's points.
     const lastH = r.phase === 'roundDone' ? game.history[game.history.length - 1] : null;
     const result = lastH ? (lastH.bids[i] === lastH.tricks[i] ? 'res-made' : 'res-miss') : '';
     const resChip = lastH ? `<span class="res-pts">+${lastH.points[i]}</span>` : '';
-    return `<div class="plate ${r.turn === i ? 'turn' : ''} ${won ? 'won' : ''} ${streak ? 'fire' : ''} ${result} ${state}" style="left:${p.x}%;top:${p.y}%">
+    // Flames sit behind the plate, so they are a separate layer at the same spot.
+    const flames = streak ? `<div class="flames" id="flames-${i}" style="left:${p.x}%;top:${p.y}%" aria-hidden="true">${'<i></i>'.repeat(11)}</div>` : '';
+    return `${flames}<div class="plate ${r.turn === i ? 'turn' : ''} ${won ? 'won' : ''} ${streak ? 'fire' : ''} ${result} ${state}" id="plate-${i}" style="left:${p.x}%;top:${p.y}%" ${streak ? `title="${esc(t('onFire', { n: streak }))}"` : ''}>
       ${bubble}
-      ${react ? `<span class="react-bubble" aria-hidden="true">${react.e}</span>` : ''}
-      <div class="plate-top"><span class="seat-name">${esc(nm)}${me ? ` <span class="hint">(${t('you')})</span>` : ''}</span>${fireBadge}${chips}${resChip}</div>
+      ${react ? `<span class="react-bubble" data-anim="rb${react.at}" aria-hidden="true">${react.e}</span>` : ''}
+      <div class="plate-top"><span class="seat-name">${esc(nm)}${me ? ` <span class="hint">(${t('you')})</span>` : ''}</span>${chips}${resChip}</div>
       <div class="plate-stats num">
         <span><span class="label">${t('bid')}</span> <b>${bid == null ? '–' : bid}</b></span>
         <span><span class="label">${t('tricks')}</span> <b class="tricks-val">${tr}</b></span>
@@ -1013,7 +1059,7 @@ function tableScene() {
     const rot = ((x.p * 37 + k * 11) % 13) - 6;
     const win = done && x.p === r.trickWinner;
     const toWinner = wp ? `;--wx:${wp.x}%;--wy:${wp.y}%;--hold:${holdLeft}ms;--collect:${COLLECT_MS}ms` : '';
-    return `<div class="tcard ${win ? 'win' : ''} ${done ? 'collect' : ''}" style="left:${p.x}%;top:${p.y}%;--r:${rot}deg${toWinner}">${cardHTML(x.c, { cls: Engine.suit(x.c) === r.trump ? 'trumpcard' : '' })}</div>`;
+    return `<div class="tcard ${win ? 'win' : ''} ${done ? 'collect' : ''}" id="tc-${x.c}" data-p="${x.p}" data-anim="${done ? 'collect' + ui.trickAnim.at : 'play'}" style="left:${p.x}%;top:${p.y}%;--r:${rot}deg${toWinner}">${cardHTML(x.c, { cls: Engine.suit(x.c) === r.trump ? 'trumpcard' : '' })}</div>`;
   }).join('');
   let center;
   const tapToContinue = false;
@@ -1042,10 +1088,10 @@ function dockView() {
   const r = game.round;
   const actor = r.turn;
   // While the deal animation plays, each of your cards appears as its card back reaches your seat.
-  const arrive = (seat, j) => { const d = handArrival(r, game.names.length, seat, j); return d == null ? {} : { style: `animation-delay:${d}ms`, extra: ' dealt-in' }; };
+  const arrive = (seat, j) => { const d = handArrival(r, game.names.length, seat, j); return d == null ? {} : { style: `animation-delay:${d}ms`, extra: ' dealt-in', anim: 'deal' + ui.deal.at }; };
   const watchHand = () => {
     if (ui.viewer == null || (!net.active && humans().length !== 1)) return '<div class="waiting">&nbsp;</div>';
-    const cards = Engine.sortHand(r.hands[ui.viewer], r.trump).map((c, j) => { const a = arrive(ui.viewer, j); return cardHTML(c, { cls: (Engine.suit(c) === r.trump ? 'trumpcard' : '') + (a.extra || ''), style: a.style }); }).join('');
+    const cards = Engine.sortHand(r.hands[ui.viewer], r.trump).map((c, j) => { const a = arrive(ui.viewer, j); return cardHTML(c, { cls: (Engine.suit(c) === r.trump ? 'trumpcard' : '') + (a.extra || ''), style: a.style, anim: a.anim, id: 'hc-' + c }); }).join('');
     return `<div class="dock-head"><h3>${esc(game.names[ui.viewer])}</h3><span class="hint">${t('yourHand')}</span></div><div class="hand static">${cards}</div>`;
   };
   if (actor != null && isBot(actor)) return `<section class="dock"><div class="hint"><b>${esc(game.names[actor])}</b> ${t('thinking')}</div>${watchHand()}</section>`;
@@ -1056,7 +1102,7 @@ function dockView() {
     const f = Engine.forbiddenBid(r, actor);
     const btns = [];
     for (let b = 0; b <= r.cards; b++) btns.push(`<button class="bidbtn" data-a="bid" data-v="${b}" ${b === f ? 'disabled' : ''} aria-pressed="${ui.selBid === b}">${b}</button>`);
-    const handHTML = hand.map((c, j) => { const a = arrive(actor, j); return cardHTML(c, { cls: (Engine.suit(c) === r.trump ? 'trumpcard' : '') + (a.extra || ''), style: a.style }); }).join('');
+    const handHTML = hand.map((c, j) => { const a = arrive(actor, j); return cardHTML(c, { cls: (Engine.suit(c) === r.trump ? 'trumpcard' : '') + (a.extra || ''), style: a.style, anim: a.anim, id: 'hc-' + c }); }).join('');
     return `<section class="dock">
       <div class="hand">${handHTML}</div>
       <div class="bidrow"><div class="bids">${btns.join('')}</div><span class="bids-pill">${t('bidsPill', { b: Engine.bidSum(r), t: r.cards })}</span></div>
@@ -1069,7 +1115,7 @@ function dockView() {
     : info.reason === 'follow' ? t('hintFollow', { s: suitName(led) })
     : info.reason === 'trump' ? t('hintTrump', { led: SYM[led], s: suitName(r.trump) })
     : t('hintFree', { led: SYM[led] });
-  const handHTML = hand.map((c) => cardHTML(c, { button: true, disabled: !info.cards.includes(c),
+  const handHTML = hand.map((c) => cardHTML(c, { button: true, disabled: !info.cards.includes(c), id: 'hc-' + c,
     cls: (Engine.suit(c) === r.trump ? 'trumpcard ' : '') + (ui.selCard === c ? 'sel' : '') })).join('');
   return `<section class="dock">
     <div class="dock-head"><h3>${esc(game.names[actor])}</h3><span class="hint">${hint}</span></div>
@@ -1737,12 +1783,72 @@ function render() {
   }
   if (ui.modal) html += modalView();
   html += themeButton();
-  app.innerHTML = html;
-  const cover = $('#cover'); if (cover) cover.focus();
-  if (focusId && !cover) {
+  const before = snapshotRects();
+  paint(app, html);
+  afterPaint(before, app);
+  const cover = $('#cover'); if (cover && document.activeElement !== cover) cover.focus();
+  if (focusId && !cover && (!document.activeElement || document.activeElement.id !== focusId)) {
     const el = document.getElementById(focusId);
     if (el) { el.focus(); try { if (caret != null) el.setSelectionRange(caret, caret); } catch (e) {} }
   }
+}
+
+/* ============ SMOOTH UPDATES ============ */
+/* Instead of rebuilding the screen, morphdom changes only what differs, so elements stay put,
+   CSS transitions run, and animations already playing are not restarted. */
+const reduceMotion = () => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+function paint(app, html) {
+  if (!window.morphdom) { app.innerHTML = html; return; }
+  const next = app.cloneNode(false);
+  next.innerHTML = html;
+  window.morphdom(app, next, {
+    childrenOnly: true,
+    onBeforeElUpdated(fromEl, toEl) {
+      if (fromEl.isEqualNode(toEl)) return false;
+      // An element mid-animation keeps its own timing (its inline delay was set when it first appeared).
+      const k = fromEl.getAttribute('data-anim');
+      if (k && k === toEl.getAttribute('data-anim')) {
+        const s = fromEl.getAttribute('style');
+        if (s == null) toEl.removeAttribute('style'); else toEl.setAttribute('style', s);
+      }
+      if (fromEl.classList.contains('flown')) toEl.classList.add('flown');
+      return true;
+    }
+  });
+}
+/* Remember where hand cards and seat plates were, so moves can be animated from there (FLIP). */
+function snapshotRects() {
+  const m = new Map();
+  document.querySelectorAll('[id^="hc-"], [id^="plate-"]').forEach((el) => m.set(el.id, el.getBoundingClientRect()));
+  return { m, tc: new Set([...document.querySelectorAll('[id^="tc-"]')].map((e) => e.id)), screen: lastScreenKey };
+}
+let lastScreenKey = null;
+function afterPaint(before, app) {
+  const screenKey = ui.screen + (game && game.over ? ':over' : '');
+  const changedScreen = screenKey !== lastScreenKey;
+  lastScreenKey = screenKey;
+  if (reduceMotion() || !app.animate) return;
+  if (changedScreen && before.screen != null) app.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+  // Cards still in your hand glide into their new places when one leaves.
+  document.querySelectorAll('[id^="hc-"]').forEach((el) => {
+    const r0 = before.m.get(el.id); if (!r0) return;
+    const r1 = el.getBoundingClientRect();
+    const dx = r0.left - r1.left, dy = r0.top - r1.top;
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: 280, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+  });
+  // A newly played card flies from your hand, or from the player's seat, to its spot on the table.
+  document.querySelectorAll('[id^="tc-"]').forEach((el) => {
+    if (before.tc.has(el.id)) return;
+    const c = el.id.slice(3), p = el.dataset.p;
+    const plateNow = document.getElementById('plate-' + p);
+    const r0 = before.m.get('hc-' + c) || before.m.get('plate-' + p) || (plateNow && plateNow.getBoundingClientRect());
+    const inner = el.querySelector('.card');
+    if (!r0 || !inner) return;
+    const r1 = inner.getBoundingClientRect();
+    const dx = (r0.left + r0.width / 2) - (r1.left + r1.width / 2), dy = (r0.top + r0.height / 2) - (r1.top + r1.height / 2);
+    el.classList.add('flown');
+    inner.animate([{ transform: `translate(${dx}px, ${dy}px) scale(.85)`, opacity: 0.85 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+  });
 }
 
 /* ============ ACTIONS ============ */
