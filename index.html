@@ -34,6 +34,7 @@
   --scrim: rgba(14, 20, 30, .55);
   --accent-tint: rgba(31, 91, 200, .07);
   --fire: #e8590c; --fire-soft: rgba(255, 112, 26, .45); --fire-tint: rgba(255, 140, 50, .10);
+  --bad: #cc2f3a; --bad-soft: #f9dcdd; --bad-glow: rgba(214, 48, 60, .35); --good-glow: rgba(29, 127, 72, .35);
   --felt: #d9e2ef; --felt-hi: #eef3fa; --felt-rim: #c9d5e6;  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
 }
@@ -46,6 +47,7 @@
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); --scrim: rgba(4, 7, 12, .7);
     --accent-tint: rgba(31, 91, 200, .10);
     --fire: #ff8a3d; --fire-soft: rgba(255, 128, 40, .42); --fire-tint: rgba(255, 128, 40, .12);
+    --bad: #ff6b72; --bad-soft: #3d1a1d; --bad-glow: rgba(255, 90, 100, .38); --good-glow: rgba(95, 208, 143, .32);
     --felt: #18212d; --felt-hi: #253246; --felt-rim: #1d2836;    color-scheme: dark;
   }
 }
@@ -57,6 +59,7 @@
   --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3); --scrim: rgba(4, 7, 12, .7);
     --accent-tint: rgba(31, 91, 200, .10);
     --fire: #ff8a3d; --fire-soft: rgba(255, 128, 40, .42); --fire-tint: rgba(255, 128, 40, .12);
+    --bad: #ff6b72; --bad-soft: #3d1a1d; --bad-glow: rgba(255, 90, 100, .38); --good-glow: rgba(95, 208, 143, .32);
     --felt: #18212d; --felt-hi: #253246; --felt-rim: #1d2836;  color-scheme: dark;
 }
 html, body { height: 100%; }
@@ -224,6 +227,17 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
   from { box-shadow: 0 0 0 2px var(--fire), 0 -2px 12px 1px var(--fire-soft), var(--shadow); }
   to { box-shadow: 0 0 0 2px var(--fire), 0 -6px 26px 6px var(--fire-soft), var(--shadow); }
 }
+.fire-badge { flex: none; display: inline-flex; align-items: center; gap: 2px; font-weight: 800; font-size: 13px; color: var(--fire); font-variant-numeric: tabular-nums; }
+.fire-badge .flame { display: inline-block; transform-origin: 50% 90%; animation: flicker .6s ease-in-out infinite alternate; }
+@keyframes flicker { from { transform: scale(1) rotate(-6deg); } to { transform: scale(1.18) rotate(5deg); } }
+/* Round result: green glow for an exact bid, red for a miss */
+.plate.res-made { border-color: var(--good); animation: resMade 1.6s ease-out both; }
+.plate.res-miss { border-color: var(--bad); animation: resMiss 1.6s ease-out both; }
+@keyframes resMade { 0% { box-shadow: 0 0 0 0 var(--good), var(--shadow); } 30% { box-shadow: 0 0 0 3px var(--good), 0 0 26px 8px var(--good-glow), var(--shadow); } 100% { box-shadow: 0 0 0 2px var(--good), 0 0 16px 3px var(--good-glow), var(--shadow); } }
+@keyframes resMiss { 0% { box-shadow: 0 0 0 0 var(--bad), var(--shadow); } 30% { box-shadow: 0 0 0 3px var(--bad), 0 0 26px 8px var(--bad-glow), var(--shadow); } 100% { box-shadow: 0 0 0 2px var(--bad), 0 0 16px 3px var(--bad-glow), var(--shadow); } }
+.res-pts { flex: none; font-weight: 800; font-size: 13px; padding: 1px 7px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.res-made .res-pts { background: var(--good-soft); color: var(--good); }
+.res-miss .res-pts { background: var(--bad-soft); color: var(--bad); }
 /* Bid bubble: pops up by the plate when that player bids, then fades */
 .bid-bubble { position: absolute; left: 50%; bottom: calc(100% + 10px); transform: translateX(-50%); background: var(--accent); color: var(--accent-fg); font-weight: 700; font-size: 14px; padding: 5px 12px; border-radius: 999px; white-space: nowrap; box-shadow: var(--shadow); z-index: 6; pointer-events: none; animation: bubble 2.4s ease both; }
 .bid-bubble b { font-size: 17px; font-variant-numeric: tabular-nums; }
@@ -254,7 +268,9 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .seat-name { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; background: var(--surface-2); color: var(--muted); flex: none; }
 .chip.accent { background: var(--accent-soft); color: var(--accent); }
-@media (prefers-reduced-motion: reduce) { .tcard, .tcard.collect, .tcard.win .card, .plate.won, .plate.fire, .dealt-in { animation: none; } .dealcard { display: none; } .plate.fire { box-shadow: 0 0 0 2px var(--fire), 0 -4px 18px 3px var(--fire-soft), var(--shadow); } }
+@media (prefers-reduced-motion: reduce) { .tcard, .tcard.collect, .tcard.win .card, .plate.won, .plate.fire, .dealt-in, .fire-badge .flame { animation: none; }
+  .plate.res-made { animation: none; box-shadow: 0 0 0 2px var(--good), 0 0 16px 3px var(--good-glow), var(--shadow); }
+  .plate.res-miss { animation: none; box-shadow: 0 0 0 2px var(--bad), 0 0 16px 3px var(--bad-glow), var(--shadow); } .dealcard { display: none; } .plate.fire { box-shadow: 0 0 0 2px var(--fire), 0 -4px 18px 3px var(--fire-soft), var(--shadow); } }
 .table-status { font-weight: 700; font-size: 17px; text-align: center; }
 .table-sub { color: var(--muted); text-align: center; }
 .trick { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; min-height: 128px; align-items: flex-end; }
@@ -623,7 +639,7 @@ const TEXT = {
     leaveQ: 'Leave this game?', leaveBody: 'The game pauses until you come back through the same invite link, or until the host replaces you with a bot.',
     nextOnline: 'Next round starts automatically.', lastOnline: 'Final results follow.', waitHostAgain: 'Waiting for the host to start another game.',
     backToLobby: 'Back to lobby', nextTrickSoon: 'Next trick in a moment…', waitingPlayer: 'Waiting for {name}…', playersLbl: 'Seats',
-    onFire: 'On fire: {n} tricks in a row',
+    onFire: 'On fire: {n} tricks in a row', roundComplete: 'Round {i} complete', dealingNext: 'Dealing the next round…', halfway: 'Halfway there',
     achievements: 'Achievements', achUnlocked: 'Achievement unlocked', achOther: 'unlocked', achLocked: 'Locked',
     achProgress: '{n} / {t} unlocked', achHint: 'Saved on this device. Bots don’t earn them.',
     achT: {
@@ -705,7 +721,7 @@ const TEXT = {
     leaveQ: 'Lahkuda mängust?', leaveBody: 'Mäng peatub, kuni naased sama kutselingiga või looja asendab sind robotiga.',
     nextOnline: 'Järgmine voor algab ise.', lastOnline: 'Järgnevad lõpptulemused.', waitHostAgain: 'Ootan, et looja alustaks uue mängu.',
     backToLobby: 'Tagasi ootetuppa', nextTrickSoon: 'Järgmine tihi kohe…', waitingPlayer: 'Ootan mängijat {name}…', playersLbl: 'Kohad',
-    onFire: 'Hoos: {n} tihti järjest',
+    onFire: 'Hoos: {n} tihti järjest', roundComplete: 'Voor {i} läbi', dealingNext: 'Jagan järgmise vooru…', halfway: 'Pool mängu läbi',
     achievements: 'Saavutused', achUnlocked: 'Saavutus avatud', achOther: 'avas', achLocked: 'Lukus',
     achProgress: '{n} / {t} avatud', achHint: 'Salvestatakse selles seadmes. Robotid neid ei teeni.',
     achT: {
@@ -894,7 +910,9 @@ function topbar() {
 const COLLECT_MS = 800;
 const trickHold = () => (net.active ? 2200 : 1000);
 /* ---- Round events seen on screen: new deals and new bids (works the same for host, friends and hotseat) ---- */
-const BUBBLE_MS = 2400, DEAL_FLIGHT = 450;
+const BUBBLE_MS = 2400, DEAL_FLIGHT = 450, RESULT_MS = 2200;
+/* The round summary window appears once: after the round that completes the first half of the game. */
+const isHalfwayRound = () => !!game && game.history.length === Math.floor(game.schedule.length / 2);
 function dealTiming(r, n) {
   const total = r.cards * n;
   const step = Math.min(110, 1600 / total);
@@ -962,13 +980,18 @@ function tableScene() {
       + (r.dealer === i ? `<span class="chip">${t('dealer')}</span>` : '');
     const won = r.phase === 'trickDone' && r.trickWinner === i;
     const streak = game.streak && game.streak.p === i && game.streak.n >= 3 ? game.streak.n : 0;
+    const fireBadge = streak ? `<span class="fire-badge" title="${esc(t('onFire', { n: streak }))}"><span class="flame" aria-hidden="true">🔥</span> ${streak}</span>` : '';
     const bub = ui.bidBubbles[i];
     const bubble = bub && Date.now() - bub.at < BUBBLE_MS
       ? `<span class="bid-bubble ${p.y < 50 ? 'below' : ''}" style="animation-delay:${-(Date.now() - bub.at)}ms">${t('bid')} <b>${bub.v}</b></span>` : '';
-    return `<div class="plate ${r.turn === i ? 'turn' : ''} ${won ? 'won' : ''} ${streak ? 'fire' : ''} ${state}" style="left:${p.x}%;top:${p.y}%" ${streak ? `title="${esc(t('onFire', { n: streak }))}"` : ''}>
+    // Round just ended: green if the bid was hit exactly, red if missed, with the round's points.
+    const lastH = r.phase === 'roundDone' ? game.history[game.history.length - 1] : null;
+    const result = lastH ? (lastH.bids[i] === lastH.tricks[i] ? 'res-made' : 'res-miss') : '';
+    const resChip = lastH ? `<span class="res-pts">+${lastH.points[i]}</span>` : '';
+    return `<div class="plate ${r.turn === i ? 'turn' : ''} ${won ? 'won' : ''} ${streak ? 'fire' : ''} ${result} ${state}" style="left:${p.x}%;top:${p.y}%">
       ${bubble}
       ${react ? `<span class="react-bubble" aria-hidden="true">${react.e}</span>` : ''}
-      <div class="plate-top"><span class="seat-name">${esc(nm)}${me ? ` <span class="hint">(${t('you')})</span>` : ''}</span>${chips}</div>
+      <div class="plate-top"><span class="seat-name">${esc(nm)}${me ? ` <span class="hint">(${t('you')})</span>` : ''}</span>${fireBadge}${chips}${resChip}</div>
       <div class="plate-stats num">
         <span><span class="label">${t('bid')}</span> <b>${bid == null ? '–' : bid}</b></span>
         <span><span class="label">${t('tricks')}</span> <b class="tricks-val">${tr}</b></span>
@@ -999,6 +1022,9 @@ function tableScene() {
     center = `<span class="label">${t('trump')}</span>${big}
       <div class="table-status">${suitName(r.trump)}${r.indicator ? '' : ` <span class="hint">(${t('drawn')})</span>`}</div>
       <div class="table-sub">${t('waitingBid', { name: esc(game.names[r.turn]) })}</div>`;
+  } else if (r.phase === 'roundDone') {
+    center = `<div class="table-status">${t('roundComplete', { i: game.history.length })}</div>
+      <div class="table-sub">${game.history.length >= game.schedule.length ? t('lastOnline') : t('dealingNext')}</div>`;
   } else if (r.phase === 'trickDone') {
     center = `<div class="table-status">${t('winsTrick', { name: esc(game.names[r.trickWinner]) })}</div>`;
   } else {
@@ -1073,6 +1099,7 @@ function bannerView() {
   const hint = net.active ? (last ? t('lastOnline') : t('nextOnline')) : (last ? t('lastRoundNext') : t('next'));
   return `<div class="overlay" ${net.active ? '' : 'data-a="skipBanner" style="cursor:pointer"'}>
     <div class="modal banner">
+      <span class="label">${t('halfway')}</span>
       <h2>${t('roundResult', { i })}</h2>
       <table class="results"><thead><tr><th></th><th class="n">${t('bid')}</th><th class="n">${t('tricks')}</th><th class="n">+</th><th class="n">${t('total')}</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="bar"><i></i></div>
@@ -1690,8 +1717,10 @@ function render() {
     const paused = isPaused();
     html = topbar() + tableScene() + dockView();
     if (r.phase === 'roundDone') {
-      html += bannerView();
-      if (runsTimers && !paused && !ui.bannerTimer) ui.bannerTimer = setTimeout(advanceRound, 4000);
+      // Plates glow green/red for the round's result; the full summary only appears at the halfway round.
+      const half = isHalfwayRound();
+      if (half) html += bannerView();
+      if (runsTimers && !paused && !ui.bannerTimer) ui.bannerTimer = setTimeout(advanceRound, half ? 4000 : RESULT_MS);
     } else if (!net.active && needsCover() && !ui.modal) html += coverView();
     if (runsTimers && !paused && !ui.botTimer && (net.active || !ui.modal)) {
       if ((r.phase === 'bidding' || r.phase === 'playing') && isBot(r.turn)) {
