@@ -225,7 +225,7 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .tcard.win { z-index: 3; }
 .tcard.flown:not(.collect) { animation: none; }
 /* Plates glide to new seats when the bottom player changes (hotseat) instead of jumping */
-.plate, .flames { transition: left .45s cubic-bezier(.2, .8, .2, 1), top .45s cubic-bezier(.2, .8, .2, 1), border-color .25s ease, background-color .25s ease; }
+.plate { transition: left .45s cubic-bezier(.2, .8, .2, 1), top .45s cubic-bezier(.2, .8, .2, 1), border-color .25s ease, background-color .25s ease; }
 /* Pop-ups fade in; their panel eases up */
 .overlay { animation: ovIn .2s ease-out both; }
 .overlay > .modal, .overlay > .cover-inner { animation: panelIn .26s cubic-bezier(.2, .9, .3, 1.1) both; }
@@ -244,27 +244,6 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 @keyframes fireGlow {
   from { box-shadow: 0 0 0 2px var(--fire), 0 -2px 12px 1px var(--fire-soft), var(--shadow); }
   to { box-shadow: 0 0 0 2px var(--fire), 0 -6px 26px 6px var(--fire-soft), var(--shadow); }
-}
-/* Flames: flickering tongues rising from behind the plate's top edge and sides */
-.flames { position: absolute; z-index: 3; width: 230px; height: 84px; transform: translate(-50%, -50%); pointer-events: none; filter: blur(.6px); }
-.flames i { position: absolute; bottom: 44%; width: 26px; height: 46px; margin-left: -13px; border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
-  background: radial-gradient(ellipse at 50% 85%, var(--flame-core) 0 18%, var(--flame-mid) 42%, var(--flame-edge) 68%, transparent 72%);
-  transform-origin: 50% 100%; opacity: .9; animation: flameLick var(--d, .7s) ease-in-out infinite alternate; animation-delay: var(--dl, 0s); }
-.flames i:nth-child(1) { left: 6%; bottom: 20%; height: 34px; --d: .62s; --dl: -.1s; rotate: -28deg; }
-.flames i:nth-child(2) { left: 15%; height: 40px; --d: .74s; --dl: -.4s; }
-.flames i:nth-child(3) { left: 25%; height: 52px; --d: .58s; --dl: -.2s; }
-.flames i:nth-child(4) { left: 35%; height: 44px; --d: .81s; --dl: -.6s; }
-.flames i:nth-child(5) { left: 45%; height: 58px; --d: .66s; --dl: -.3s; }
-.flames i:nth-child(6) { left: 55%; height: 48px; --d: .72s; --dl: -.5s; }
-.flames i:nth-child(7) { left: 65%; height: 56px; --d: .6s; --dl: -.15s; }
-.flames i:nth-child(8) { left: 75%; height: 42px; --d: .78s; --dl: -.45s; }
-.flames i:nth-child(9) { left: 85%; height: 38px; --d: .64s; --dl: -.25s; }
-.flames i:nth-child(10) { left: 94%; bottom: 20%; height: 34px; --d: .7s; --dl: -.55s; rotate: 28deg; }
-.flames i:nth-child(11) { left: 50%; bottom: 30%; width: 180px; margin-left: -90px; height: 30px; border-radius: 50%; --d: .9s; opacity: .55; }
-@keyframes flameLick {
-  0% { transform: translateY(2px) scaleY(.82) scaleX(1.05); opacity: .75; }
-  50% { transform: translateY(-3px) scaleY(1.18) scaleX(.9); opacity: 1; }
-  100% { transform: translateY(-1px) scaleY(.95) scaleX(1); opacity: .85; }
 }
 /* Round result: green glow for an exact bid, red for a miss */
 .plate.res-made { border-color: var(--good); animation: resMade 1.6s ease-out both; }
@@ -304,8 +283,8 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .seat-name { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chip { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; background: var(--surface-2); color: var(--muted); flex: none; }
 .chip.accent { background: var(--accent-soft); color: var(--accent); }
-@media (prefers-reduced-motion: reduce) { .tcard, .tcard.collect, .tcard.win .card, .plate.won, .plate.fire, .dealt-in, .flames i, .overlay, .overlay > .modal, .overlay > .cover-inner { animation: none; }
-  .plate, .flames { transition: none; }
+@media (prefers-reduced-motion: reduce) { .tcard, .tcard.collect, .tcard.win .card, .plate.won, .plate.fire, .dealt-in, .overlay, .overlay > .modal, .overlay > .cover-inner { animation: none; }
+  .plate { transition: none; }
   .plate.res-made { animation: none; box-shadow: 0 0 0 2px var(--good), 0 0 16px 3px var(--good-glow), var(--shadow); }
   .plate.res-miss { animation: none; box-shadow: 0 0 0 2px var(--bad), 0 0 16px 3px var(--bad-glow), var(--shadow); } .dealcard { display: none; } .plate.fire { box-shadow: 0 0 0 2px var(--fire), 0 -4px 18px 3px var(--fire-soft), var(--shadow); } }
 .table-status { font-weight: 700; font-size: 17px; text-align: center; }
@@ -447,7 +426,6 @@ button, .card, .opt { touch-action: manipulation; -webkit-tap-highlight-color: t
   .plate-stats .label { font-size: 9px; letter-spacing: .02em; }
   .plate-stats b { font-size: 13px; }
   .res-pts { font-size: 11px; padding: 0 5px; }
-  .flames { transform: translate(-50%, -50%) scale(.6); }
   .bid-bubble { font-size: 12px; padding: 3px 9px; }
   .bid-bubble b { font-size: 14px; }
   .react-bubble { font-size: 22px; top: -14px; }
@@ -1097,9 +1075,7 @@ function tableScene() {
     const lastH = r.phase === 'roundDone' ? game.history[game.history.length - 1] : null;
     const result = lastH ? (lastH.bids[i] === lastH.tricks[i] ? 'res-made' : 'res-miss') : '';
     const resChip = lastH ? `<span class="res-pts">+${lastH.points[i]}</span>` : '';
-    // Flames sit behind the plate, so they are a separate layer at the same spot.
-    const flames = streak ? `<div class="flames" id="flames-${i}" style="left:${p.x}%;top:${p.y}%" aria-hidden="true">${'<i></i>'.repeat(11)}</div>` : '';
-    return `${flames}<div class="plate ${r.turn === i ? 'turn' : ''} ${won ? 'won' : ''} ${streak ? 'fire' : ''} ${result} ${state}" id="plate-${i}" style="left:${p.x}%;top:${p.y}%" ${streak ? `title="${esc(t('onFire', { n: streak }))}"` : ''}>
+    return `<div class="plate ${r.turn === i ? 'turn' : ''} ${won ? 'won' : ''} ${streak ? 'fire' : ''} ${result} ${state}" id="plate-${i}" style="left:${p.x}%;top:${p.y}%" ${streak ? `title="${esc(t('onFire', { n: streak }))}"` : ''}>
       ${bubble}
       ${react ? `<span class="react-bubble" data-anim="rb${react.at}" aria-hidden="true">${react.e}</span>` : ''}
       <div class="plate-top"><span class="seat-name">${esc(nm)}${me ? ` <span class="hint">(${t('you')})</span>` : ''}</span>${chips}${resChip}</div>
