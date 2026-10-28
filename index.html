@@ -1227,8 +1227,6 @@ function modalView() {
     <span class="hint">${t('bid')}/${t('tricks')} · ${t('score')}</span>${sheetTable()}</div></div>`;
   if (ui.modal === 'menu') return `<div class="overlay" data-a="closeModalBg"><div class="modal"><div class="modal-head"><h2>${t('menu')}</h2>${close}</div>
     <div class="menu-list">
-      <button class="btn" data-a="sheet">${t('scoreSheet')}</button>
-      ${game && game.round ? `<button class="btn" data-a="lastTrick">${t('lastTrick')}</button>` : ''}
       <button class="btn" data-a="rules">${t('rules')}</button>
       <button class="btn" data-a="lang">${t('lang')}</button>
       <button class="btn danger" data-a="abandonAsk">${!net.active ? t('abandon') : net.isHost ? t('endForAll') : t('leave')}</button>
