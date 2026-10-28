@@ -71,6 +71,7 @@
     --felt: #18212d; --felt-hi: #253246; --felt-rim: #1d2836;  color-scheme: dark;
 }
 html, body { height: 100%; }
+html, body { overflow-x: clip; }
 body { margin: 0; }
 body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.45; }
 * { box-sizing: border-box; }
@@ -406,11 +407,69 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .verdict { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 5vw, 46px); letter-spacing: -.02em; }
 .verdict em { font-style: normal; color: var(--ink-red); }
 
+/* Phone / narrow layout (portrait) */
+.narrow-only { display: none; }
+button, .card, .opt { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 @media (max-width: 700px) {
-  .plate { max-width: 140px; padding: 6px 8px; }
-  .plate-stats { gap: 8px; }
+  .wide-only { display: none !important; }
+  .narrow-only { display: inline; }
   .names { grid-template-columns: 1fr; }
-  .card { --w: 52px; }
+  .card { --w: 50px; }
+  /* Top bar: one compact row */
+  .topbar { gap: 8px; padding-block: 8px; flex-wrap: nowrap; }
+  .roundinfo { gap: 10px; flex-wrap: nowrap; min-width: 0; }
+  .roundinfo .val { font-size: 14px; white-space: nowrap; }
+  .roundinfo .label { font-size: 9px; }
+  .trumpval { gap: 4px; }
+  .trumpval .card.sm { --w: 26px; }
+  .bids-pill { font-size: 12px; padding: 3px 8px; }
+  .topbar .btn { padding: 6px 10px; font-size: 13px; }
+  .react-bar { display: none; }
+  /* Table */
+  .tablewrap { min-height: 330px; margin-block: 8px 0; }
+  .tcard .card, .tablewrap.many .tcard .card { --w: 40px; }
+  .felt-center { gap: 4px; }
+  .felt-center .card.lg { --w: 58px; }
+  .table-status { font-size: 14px; }
+  .table-sub { font-size: 12px; }
+  .hero-art { overflow: hidden; }
+  .felt-center.ph-playing, .felt-center.ph-trickDone { display: none; }
+  /* Trump is already in the top bar on phones, so the middle only says who is bidding */
+  .felt-center { max-width: 30%; }
+  .felt-center.ph-bidding > :not(.table-sub) { display: none; }
+  .felt-center.ph-bidding .table-sub { font-size: 13px; color: var(--fg); font-weight: 700; }
+  .plate { max-width: 108px; padding: 5px 7px; gap: 2px; border-radius: 10px; }
+  .plate-top { gap: 4px; }
+  .seat-name { font-size: 13px; }
+  .plate-top .hint { display: none; }
+  .chip { font-size: 9px; padding: 1px 4px; }
+  .plate-stats { gap: 6px; font-size: 11px; }
+  .plate-stats .label { font-size: 9px; letter-spacing: .02em; }
+  .plate-stats b { font-size: 13px; }
+  .res-pts { font-size: 11px; padding: 0 5px; }
+  .flames { transform: translate(-50%, -50%) scale(.6); }
+  .bid-bubble { font-size: 12px; padding: 3px 9px; }
+  .bid-bubble b { font-size: 14px; }
+  .react-bubble { font-size: 22px; top: -14px; }
+  /* Hand: one overlapping row, like holding cards */
+  .dock { padding-block: 8px 12px; gap: 8px; }
+  .dock-head h3 { font-size: 16px; }
+  .hand { flex-wrap: nowrap; gap: 0; max-width: 100%; }
+  .hand > .card + .card { margin-left: clamp(-36px, calc((100vw - 32px - var(--count) * var(--w)) / (var(--count) - 1)), 4px); }
+  .hand .card.sel { transform: translateY(-14px); z-index: 1; }
+  .bids { gap: 6px; }
+  .bidbtn { width: 40px; height: 40px; font-size: 17px; border-radius: 9px; }
+  .bidrow { gap: 8px; }
+  .forbid { font-size: 12px; text-align: center; }
+  .btn.big { padding: 10px 18px; font-size: 16px; }
+  /* Menus, lobby, modals */
+  .modal { padding: 16px; }
+  .lseat { flex-wrap: wrap; row-gap: 4px; }
+  .lctl { margin-left: auto; }
+  .seg { flex-wrap: wrap; }
+  .seg button { padding: 8px 12px; }
+  .center-col { padding-block: 20px; }
+  .cover-inner .what { font-size: 17px; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
@@ -683,6 +742,7 @@ const TEXT = {
     leaveQ: 'Leave this game?', leaveBody: 'The game pauses until you come back through the same invite link, or until the host replaces you with a bot.',
     nextOnline: 'Next round starts automatically.', lastOnline: 'Final results follow.', waitHostAgain: 'Waiting for the host to start another game.',
     backToLobby: 'Back to lobby', nextTrickSoon: 'Next trick in a moment…', waitingPlayer: 'Waiting for {name}…', playersLbl: 'Seats',
+    bidS: 'Bid', wonS: 'Won', ptsS: 'Pts',
     onFire: 'On fire: {n} tricks in a row', roundComplete: 'Round {i} complete', dealingNext: 'Dealing the next round…', halfway: 'Halfway there',
     achievements: 'Achievements', achUnlocked: 'Achievement unlocked', achOther: 'unlocked', achLocked: 'Locked',
     achProgress: '{n} / {t} unlocked', achHint: 'Saved on this device. Bots don’t earn them.',
@@ -765,6 +825,7 @@ const TEXT = {
     leaveQ: 'Lahkuda mängust?', leaveBody: 'Mäng peatub, kuni naased sama kutselingiga või looja asendab sind robotiga.',
     nextOnline: 'Järgmine voor algab ise.', lastOnline: 'Järgnevad lõpptulemused.', waitHostAgain: 'Ootan, et looja alustaks uue mängu.',
     backToLobby: 'Tagasi ootetuppa', nextTrickSoon: 'Järgmine tihi kohe…', waitingPlayer: 'Ootan mängijat {name}…', playersLbl: 'Kohad',
+    bidS: 'Pakk', wonS: 'Võit', ptsS: 'P',
     onFire: 'Hoos: {n} tihti järjest', roundComplete: 'Voor {i} läbi', dealingNext: 'Jagan järgmise vooru…', halfway: 'Pool mängu läbi',
     achievements: 'Saavutused', achUnlocked: 'Saavutus avatud', achOther: 'avas', achLocked: 'Lukus',
     achProgress: '{n} / {t} avatud', achHint: 'Salvestatakse selles seadmes. Robotid neid ei teeni.',
@@ -932,20 +993,20 @@ function topbar() {
   const r = game.round, total = game.schedule.length;
   const trumpPart = r.indicator
     ? `<span class="trumpval">${cardHTML(r.indicator, { size: 'sm' })}<span class="val">${suitName(r.trump)}</span></span>`
-    : `<span class="trumpval">${suitHTML(r.trump)}<span class="val">${TEXT[lang].suits[r.trump]}</span><span class="hint">(${t('drawn')})</span></span>`;
+    : `<span class="trumpval">${suitHTML(r.trump)}<span class="val">${TEXT[lang].suits[r.trump]}</span><span class="hint wide-only">(${t('drawn')})</span></span>`;
   return `<header class="topbar">
-    <span class="brand">Sitaratas</span>
+    <span class="brand wide-only">Sitaratas</span>
     <div class="roundinfo">
       <div class="item"><span class="label">${t('round')}</span><span class="val num">${game.roundIdx + 1} / ${total}</span></div>
       <div class="item"><span class="label">${t('cardsLbl')}</span><span class="val num">${r.cards}</span></div>
-      <div class="item"><span class="label">${t('dealer')}</span><span class="val">${esc(game.names[r.dealer])}</span></div>
+      <div class="item wide-only"><span class="label">${t('dealer')}</span><span class="val">${esc(game.names[r.dealer])}</span></div>
       <div class="item"><span class="label">${t('trump')}</span>${trumpPart}</div>
       ${r.phase === 'bidding' ? '' : `<span class="bids-pill">${t('bidsPill', { b: Engine.bidSum(r), t: r.cards })}</span>`}
     </div>
     <span class="spacer"></span>
     ${net.active ? `<span class="react-bar">${REACTS.map((e) => `<button class="react-btn" data-a="react" data-v="${e}" aria-label="${e}">${e}</button>`).join('')}</span>` : ''}
-    <button class="btn" data-a="lastTrick">${t('lastTrick')}</button>
-    <button class="btn" data-a="sheet">${t('scoreSheet')}</button>
+    <button class="btn wide-only" data-a="lastTrick">${t('lastTrick')}</button>
+    <button class="btn wide-only" data-a="sheet">${t('scoreSheet')}</button>
     <button class="btn" data-a="menu">${t('menu')}</button>
   </header>`;
 }
@@ -1006,10 +1067,14 @@ function tableAnchor() {
   return ui.viewer != null ? ui.viewer : 0;
 }
 /* Position on the table oval. Play passes to the left, so the next seat is to the bottom player's left. k scales toward the centre. */
-function seatPos(i, n, anchor, k) {
+const isNarrow = () => window.innerWidth < 700;
+function seatPos(i, n, anchor, k, forCard) {
   const d = (i - anchor + n) % n;
   const a = (90 + d * 360 / n) * Math.PI / 180;
-  return { x: 50 + 40 * k * Math.cos(a), y: 50 + 40 * k * Math.sin(a) };
+  // Phones in portrait: a taller, narrower oval so side seats stay on screen,
+  // and played cards pulled in toward the middle so they clear the side plates.
+  const rx = isNarrow() ? (forCard ? 15 : 32) : 40, ry = isNarrow() ? 42 : 40;
+  return { x: 50 + rx * k * Math.cos(a), y: 50 + ry * k * Math.sin(a) };
 }
 function tableScene() {
   const r = game.round, n = game.names.length, anchor = tableAnchor();
@@ -1022,7 +1087,7 @@ function tableScene() {
     const me = net.active && i === net.mySeat;
     const chips = (isBot(i) ? `<span class="chip accent">${t('bot')}</span>` : '')
       + (!seatConnected(i) ? `<span class="chip warn">${t('offline')}</span>` : '')
-      + (r.dealer === i ? `<span class="chip">${t('dealer')}</span>` : '');
+      + (r.dealer === i ? `<span class="chip"><span class="wide-only">${t('dealer')}</span><span class="narrow-only" title="${esc(t('dealer'))}">D</span></span>` : '');
     const won = r.phase === 'trickDone' && r.trickWinner === i;
     const streak = game.streak && game.streak.p === i && game.streak.n >= 3 ? game.streak.n : 0;
     const bub = ui.bidBubbles[i];
@@ -1039,9 +1104,9 @@ function tableScene() {
       ${react ? `<span class="react-bubble" data-anim="rb${react.at}" aria-hidden="true">${react.e}</span>` : ''}
       <div class="plate-top"><span class="seat-name">${esc(nm)}${me ? ` <span class="hint">(${t('you')})</span>` : ''}</span>${chips}${resChip}</div>
       <div class="plate-stats num">
-        <span><span class="label">${t('bid')}</span> <b>${bid == null ? '–' : bid}</b></span>
-        <span><span class="label">${t('tricks')}</span> <b class="tricks-val">${tr}</b></span>
-        <span><span class="label">${t('score')}</span> <b>${game.totals[i]}</b></span>
+        <span><span class="label"><span class="wide-only">${t('bid')}</span><span class="narrow-only">${t('bidS')}</span></span> <b>${bid == null ? '–' : bid}</b></span>
+        <span><span class="label"><span class="wide-only">${t('tricks')}</span><span class="narrow-only">${t('wonS')}</span></span> <b class="tricks-val">${tr}</b></span>
+        <span><span class="label"><span class="wide-only">${t('score')}</span><span class="narrow-only">${t('ptsS')}</span></span> <b>${game.totals[i]}</b></span>
       </div>
     </div>`;
   }).join('');
@@ -1055,7 +1120,7 @@ function tableScene() {
     holdLeft = trickHold() - (Date.now() - ui.trickAnim.at);
   }
   const played = r.trick.map((x, k) => {
-    const p = seatPos(x.p, n, anchor, 0.52);
+    const p = seatPos(x.p, n, anchor, isNarrow() ? 0.44 : 0.52, true);
     const rot = ((x.p * 37 + k * 11) % 13) - 6;
     const win = done && x.p === r.trickWinner;
     const toWinner = wp ? `;--wx:${wp.x}%;--wy:${wp.y}%;--hold:${holdLeft}ms;--collect:${COLLECT_MS}ms` : '';
@@ -1080,7 +1145,7 @@ function tableScene() {
     <div class="felt"></div>
     ${dealLayer(r, n, anchor)}
     ${played}
-    <div class="felt-center">${center}</div>
+    <div class="felt-center ph-${r.phase}">${center}</div>
     ${plates}
   </section>`;
 }
@@ -1092,7 +1157,7 @@ function dockView() {
   const watchHand = () => {
     if (ui.viewer == null || (!net.active && humans().length !== 1)) return '<div class="waiting">&nbsp;</div>';
     const cards = Engine.sortHand(r.hands[ui.viewer], r.trump).map((c, j) => { const a = arrive(ui.viewer, j); return cardHTML(c, { cls: (Engine.suit(c) === r.trump ? 'trumpcard' : '') + (a.extra || ''), style: a.style, anim: a.anim, id: 'hc-' + c }); }).join('');
-    return `<div class="dock-head"><h3>${esc(game.names[ui.viewer])}</h3><span class="hint">${t('yourHand')}</span></div><div class="hand static">${cards}</div>`;
+    return `<div class="dock-head"><h3>${esc(game.names[ui.viewer])}</h3><span class="hint">${t('yourHand')}</span></div><div class="hand static" style="--count:${r.hands[ui.viewer].length}">${cards}</div>`;
   };
   if (actor != null && isBot(actor)) return `<section class="dock"><div class="hint"><b>${esc(game.names[actor])}</b> ${t('thinking')}</div>${watchHand()}</section>`;
   if (actor != null && net.active && ui.viewer !== actor) return `<section class="dock"><div class="hint">${t('waitingPlayer', { name: `<b>${esc(game.names[actor])}</b>` })}</div>${watchHand()}</section>`;
@@ -1104,7 +1169,7 @@ function dockView() {
     for (let b = 0; b <= r.cards; b++) btns.push(`<button class="bidbtn" data-a="bid" data-v="${b}" ${b === f ? 'disabled' : ''} aria-pressed="${ui.selBid === b}">${b}</button>`);
     const handHTML = hand.map((c, j) => { const a = arrive(actor, j); return cardHTML(c, { cls: (Engine.suit(c) === r.trump ? 'trumpcard' : '') + (a.extra || ''), style: a.style, anim: a.anim, id: 'hc-' + c }); }).join('');
     return `<section class="dock">
-      <div class="hand">${handHTML}</div>
+      <div class="hand" style="--count:${hand.length}">${handHTML}</div>
       <div class="bidrow"><div class="bids">${btns.join('')}</div><span class="bids-pill">${t('bidsPill', { b: Engine.bidSum(r), t: r.cards })}</span></div>
       ${f != null ? `<div class="forbid">${t('forbidden', { f, t: r.cards })}</div>` : ''}
       <button class="btn primary big" data-a="confirmBid" ${ui.selBid == null ? 'disabled' : ''}>${ui.selBid == null ? t('chooseBid') : t('confirmBid', { n: ui.selBid })}</button>
@@ -1119,7 +1184,7 @@ function dockView() {
     cls: (Engine.suit(c) === r.trump ? 'trumpcard ' : '') + (ui.selCard === c ? 'sel' : '') })).join('');
   return `<section class="dock">
     <div class="dock-head"><h3>${esc(game.names[actor])}</h3><span class="hint">${hint}</span></div>
-    <div class="hand">${handHTML}</div>
+    <div class="hand" style="--count:${hand.length}">${handHTML}</div>
     <button class="btn primary big" data-a="confirmCard" ${ui.selCard ? '' : 'disabled'}>${ui.selCard ? t('playBtn', { c: cardText(ui.selCard) }) : t('chooseCard')}</button>
   </section>`;
 }
@@ -1187,6 +1252,7 @@ function modalView() {
   if (ui.modal === 'menu') return `<div class="overlay" data-a="closeModalBg"><div class="modal"><div class="modal-head"><h2>${t('menu')}</h2>${close}</div>
     <div class="menu-list">
       <button class="btn" data-a="sheet">${t('scoreSheet')}</button>
+      ${game && game.round ? `<button class="btn" data-a="lastTrick">${t('lastTrick')}</button>` : ''}
       <button class="btn" data-a="rules">${t('rules')}</button>
       <button class="btn" data-a="lang">${t('lang')}</button>
       <button class="btn danger" data-a="abandonAsk">${!net.active ? t('abandon') : net.isHost ? t('endForAll') : t('leave')}</button>
@@ -2000,6 +2066,9 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && document.activeElement && (document.activeElement.id === 'onCode' || (document.activeElement.id === 'onName' && joinCode))) { e.preventDefault(); act('joinGo'); }
 });
 if (joinCode) ui.screen = 'online';
+/* Seat positions depend on screen width (phone vs laptop), so redraw after a resize or rotation. */
+let resizeTimer = null;
+window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (ui.screen === 'game') render(); }, 150); });
 render();
 /* A friend reopening their invite link gets their seat back without retyping anything. */
 if (joinCode && net.name && store.get(tokenKey(joinCode))) clientJoin(joinCode);
