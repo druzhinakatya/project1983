@@ -130,6 +130,18 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .ach-date { font-size: 12px; color: var(--accent); font-weight: 700; }
 .ach-locked { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+/* Rejoin banner on the main menu */
+.rejoin { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--accent); background: var(--accent-soft); max-width: 440px; }
+.rejoin-text { flex: 1; min-width: 160px; font-weight: 700; }
+.rejoin-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px var(--good-soft); animation: livePulse 1.6s ease-in-out infinite; }
+@keyframes livePulse { 50% { box-shadow: 0 0 0 6px transparent; } }
+/* Stats page */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 10px; }
+.stat { display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.stat-icon { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; background: var(--surface-2); color: var(--muted); font-weight: 800; }
+.stat b { font-family: var(--display); font-size: 24px; }
+.stat-sub { color: var(--accent); font-weight: 700; }
+.stat .hint { display: block; }
 /* Main menu options */
 .menu-opts { display: flex; flex-direction: column; gap: 10px; max-width: 440px; }
 .opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; transition: border-color .12s, transform .12s; }
@@ -405,6 +417,8 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 
 /* Phone / narrow layout (portrait) */
 .narrow-only { display: none; }
+.btn.phone-only { display: none; }
+@media (max-width: 700px) { .btn.phone-only { display: block; } }
 button, .card, .opt { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 @media (max-width: 700px) {
   .wide-only { display: none !important; }
@@ -739,6 +753,11 @@ const TEXT = {
     leaveQ: 'Leave this game?', leaveBody: 'The game pauses until you come back through the same invite link, or until the host replaces you with a bot.',
     nextOnline: 'Next round starts automatically.', lastOnline: 'Final results follow.', waitHostAgain: 'Waiting for the host to start another game.',
     backToLobby: 'Back to lobby', nextTrickSoon: 'Next trick in a moment…', waitingPlayer: 'Waiting for {name}…', playersLbl: 'Seats',
+    soundOn: 'Sound on', soundOff: 'Sound off', stats: 'Stats', cancel: 'Cancel',
+    roomStillOpen: 'Your room {code} is still open', gameStillOn: 'You were playing in room {code}', resume: 'Resume', rejoin: 'Rejoin', forget: 'Dismiss',
+    stGames: 'Games played', stWins: 'Wins', stSitaratas: 'Times the Sitaratas', stExact: 'Exact bids', stStreak: 'Longest trick streak',
+    stHigh: 'Highest score', stAvg: 'Average score', stHint: 'Saved on this device. Only human players on this device count.',
+    stReset: 'Reset stats', stResetQ: 'Reset all stats on this device?', stResetYes: 'Reset',
     bidS: 'Bid', wonS: 'Won', ptsS: 'Pts', gameLength: 'Game length', fullGame: 'Full game', halfGame: 'Half game',
     onFire: 'On fire: {n} tricks in a row', roundComplete: 'Round {i} complete', dealingNext: 'Dealing the next round…', halfway: 'Halfway there',
     achievements: 'Achievements', achUnlocked: 'Achievement unlocked', achOther: 'unlocked', achLocked: 'Locked',
@@ -757,7 +776,22 @@ const TEXT = {
       comeback: ['Comeback', 'Win a game after being last at the halfway point'],
       escape: ['Escape artist', 'Be last with 3 rounds to go, then avoid becoming the Sitaratas'],
       sitaratas: ['The Sitaratas', 'Become the Sitaratas for the first time'],
-      regular: ['Regular', 'Finish 10 games']
+      regular: ['Regular', 'Finish 10 games'],
+      nerves: ['Nerves of steel', 'Bid 0 in a round of 7 or more cards and take no tricks'],
+      bigTalk: ['Big talker', 'Bid 6 or more tricks and make it exactly'],
+      allIn: ['All in', 'Bid and win every trick in a round of 6 or more cards'],
+      mindReader: ['Mind reader', 'Make 10 exact bids in a row in one game'],
+      wildfire: ['Wildfire', 'Win 7 tricks in a row'],
+      domination: ['Total domination', 'Be top of the scores after every round of a game'],
+      photoFinish: ['Photo finish', 'Win a game by exactly 1 point'],
+      landslide: ['Landslide', 'Win a game by 30 or more points'],
+      halfHero: ['Half-time hero', 'Win a half game'],
+      fullHouse: ['Full house', 'Win a game with 6 players'],
+      robotSlayer: ['Robot slayer', 'Finish ahead of 3 or more bots in one game'],
+      veteran: ['Veteran', 'Finish 50 games'],
+      hoarder: ['Point hoarder', 'Collect 1,000 points across all your games'],
+      overachiever: ['Overachiever', 'Take 3 or more tricks more than you bid in one round'],
+      repeatOffender: ['Repeat offender', 'Become the Sitaratas 3 games in a row']
     },
     playOffline: 'Play offline', playOfflineHint: 'One device: pass it around, or play against bots',
     hostOptHint: 'Get a room code and invite your friends', joinGame: 'Join a game', joinOptHint: 'Enter the room code a friend sent you',
@@ -822,6 +856,11 @@ const TEXT = {
     leaveQ: 'Lahkuda mängust?', leaveBody: 'Mäng peatub, kuni naased sama kutselingiga või looja asendab sind robotiga.',
     nextOnline: 'Järgmine voor algab ise.', lastOnline: 'Järgnevad lõpptulemused.', waitHostAgain: 'Ootan, et looja alustaks uue mängu.',
     backToLobby: 'Tagasi ootetuppa', nextTrickSoon: 'Järgmine tihi kohe…', waitingPlayer: 'Ootan mängijat {name}…', playersLbl: 'Kohad',
+    soundOn: 'Heli sees', soundOff: 'Heli väljas', stats: 'Statistika', cancel: 'Tühista',
+    roomStillOpen: 'Sinu tuba {code} on veel avatud', gameStillOn: 'Sa mängisid toas {code}', resume: 'Jätka', rejoin: 'Liitu uuesti', forget: 'Peida',
+    stGames: 'Mängitud mänge', stWins: 'Võite', stSitaratas: 'Kordi Sitaratas', stExact: 'Täpseid pakkumisi', stStreak: 'Pikim tihiseeria',
+    stHigh: 'Kõrgeim skoor', stAvg: 'Keskmine skoor', stHint: 'Salvestatakse selles seadmes. Arvesse lähevad ainult selle seadme inimmängijad.',
+    stReset: 'Lähtesta statistika', stResetQ: 'Lähtestada kogu selle seadme statistika?', stResetYes: 'Lähtesta',
     bidS: 'Pakk', wonS: 'Võit', ptsS: 'P', gameLength: 'Mängu pikkus', fullGame: 'Terve mäng', halfGame: 'Pool mängu',
     onFire: 'Hoos: {n} tihti järjest', roundComplete: 'Voor {i} läbi', dealingNext: 'Jagan järgmise vooru…', halfway: 'Pool mängu läbi',
     achievements: 'Saavutused', achUnlocked: 'Saavutus avatud', achOther: 'avas', achLocked: 'Lukus',
@@ -840,7 +879,22 @@ const TEXT = {
       comeback: ['Tagasitulek', 'Võida mäng, olles poole peal viimane'],
       escape: ['Põgenemiskunstnik', 'Ole 3 vooru enne lõppu viimane, kuid ära jää Sitaratasks'],
       sitaratas: ['Sitaratas', 'Jää esimest korda Sitaratasks'],
-      regular: ['Püsikunde', 'Mängi läbi 10 mängu']
+      regular: ['Püsikunde', 'Mängi läbi 10 mängu'],
+      nerves: ['Raudsed närvid', 'Paku 0 vähemalt 7 kaardiga voorus ja ära võta ühtegi tihti'],
+      bigTalk: ['Suur sõna', 'Paku vähemalt 6 tihti ja täida pakkumine täpselt'],
+      allIn: ['Kõik või mitte midagi', 'Paku ja võta kõik tihid vähemalt 6 kaardiga voorus'],
+      mindReader: ['Mõttelugeja', 'Tee ühes mängus 10 täpset pakkumist järjest'],
+      wildfire: ['Metsapõleng', 'Võta 7 tihti järjest'],
+      domination: ['Täielik ülemvõim', 'Ole terve mängu jooksul pärast iga vooru tabeli tipus'],
+      photoFinish: ['Fotofiniš', 'Võida mäng täpselt 1 punktiga'],
+      landslide: ['Purustav võit', 'Võida mäng vähemalt 30 punktiga'],
+      halfHero: ['Poolaja kangelane', 'Võida pool mängu'],
+      fullHouse: ['Täis maja', 'Võida mäng 6 mängijaga'],
+      robotSlayer: ['Robotite hävitaja', 'Lõpeta mäng vähemalt 3 roboti ees'],
+      veteran: ['Veteran', 'Mängi läbi 50 mängu'],
+      hoarder: ['Punktikoguja', 'Kogu kõigi mängudega kokku 1000 punkti'],
+      overachiever: ['Üleliigne innukus', 'Võta ühes voorus vähemalt 3 tihti üle oma pakkumise'],
+      repeatOffender: ['Kordusrikkuja', 'Jää 3 mängu järjest Sitaratasks']
     },
     playOffline: 'Mängi võrguta', playOfflineHint: 'Üks seade: andke seda ringi või mängi robotite vastu',
     hostOptHint: 'Saad toakoodi ja kutsud sõbrad', joinGame: 'Liitu mänguga', joinOptHint: 'Sisesta toakood, mille sõber sulle saatis',
@@ -933,6 +987,7 @@ function homeView() {
       <div class="fan">${fan}</div>
       <div class="wordmark">Sitaratas<span class="dot">.</span></div>
       <p class="lede">${t('tagline')}</p>
+      ${rejoinBanner()}
       ${game ? `<div class="row"><button class="btn primary big" data-a="continue">${t('continueGame')}</button></div>` : ''}
       <div class="menu-opts">
         ${menuOpt('toSetup', '▶', 'playOffline', 'playOfflineHint')}
@@ -940,8 +995,10 @@ function homeView() {
       </div>
       <div class="linkrow">
         <button class="btn ghost" data-a="toAch">🏆 ${t('achievements')} <span class="hint num">${ACHS.filter((a) => achState.u[a.id]).length}/${ACHS.length}</span></button>
+        <button class="btn ghost" data-a="toStats">📊 ${t('stats')}</button>
         <button class="btn ghost" data-a="rules">${t('rules')}</button>
         <button class="btn ghost" data-a="lang">${t('lang')}</button>
+        <button class="btn ghost" data-a="sound">${Sfx.on ? '🔊 ' + t('soundOn') : '🔈 ' + t('soundOff')}</button>
       </div>
       <ul class="feats">${feats}</ul>
     </div>
@@ -1259,8 +1316,11 @@ function modalView() {
     <span class="hint">${t('bid')}/${t('tricks')} · ${t('score')}</span>${sheetTable()}</div></div>`;
   if (ui.modal === 'menu') return `<div class="overlay" data-a="closeModalBg"><div class="modal"><div class="modal-head"><h2>${t('menu')}</h2>${close}</div>
     <div class="menu-list">
+      <button class="btn phone-only" data-a="sheet">${t('scoreSheet')}</button>
+      ${game && game.round ? `<button class="btn phone-only" data-a="lastTrick">${t('lastTrick')}</button>` : ''}
       <button class="btn" data-a="rules">${t('rules')}</button>
       <button class="btn" data-a="lang">${t('lang')}</button>
+      <button class="btn" data-a="sound">${Sfx.on ? '🔊 ' + t('soundOn') : '🔈 ' + t('soundOff')}</button>
       <button class="btn danger" data-a="abandonAsk">${!net.active ? t('abandon') : net.isHost ? t('endForAll') : t('leave')}</button>
     </div></div></div>`;
   if (ui.modal === 'abandon') {
@@ -1564,7 +1624,7 @@ async function clientJoin(code) {
     if (net.peer !== peer || !net.active) return;
     if (err.type === 'peer-unavailable') {
       if (net.everConnected) { net.hostOk = false; scheduleReconnect(); render(); }
-      else { const c = net.room; teardown(); joinCode = c; net.error = 'roomNotFound'; ui.screen = 'online'; render(); }
+      else { const c = net.room; store.del(LAST_JOIN_KEY); teardown(); joinCode = c; net.error = 'roomNotFound'; ui.onlineMode = 'join'; ui.screen = 'online'; render(); }
     } else if (['network', 'server-error', 'socket-error', 'browser-incompatible', 'ssl-unavailable'].includes(err.type) && !net.everConnected) {
       teardown(); net.error = 'connFailed'; ui.screen = 'online'; render();
     }
@@ -1590,6 +1650,7 @@ function clientConnect() {
 function scheduleReconnect() { clearTimeout(net.retry); net.retry = setTimeout(clientConnect, 3000); }
 function clientOnMessage(m) {
   if (!m || typeof m !== 'object') return;
+  if ((m.t === 'lobby' || m.t === 'state') && net.room) store.set(LAST_JOIN_KEY, JSON.stringify({ room: net.room, at: Date.now() }));
   if (m.t === 'lobby') { net.lobby = m; net.mySeat = m.you; net.phase = 'lobby'; game = null; ui.screen = 'lobby'; ui.modal = null; render(); }
   else if (m.t === 'state') {
     const prevTurn = game && game.round ? game.round.turn : null;
@@ -1600,11 +1661,29 @@ function clientOnMessage(m) {
   } else if (m.t === 'react' && REACTS.includes(m.e)) showReact(m.seat, m.e);
   else if (m.t === 'achSeen' && achById(m.id) && m.seat !== net.mySeat && game && game.names[m.seat]) achToast(m.id, game.names[m.seat]);
   else if (['full', 'started', 'kicked', 'closed'].includes(m.t)) {
+    store.del(LAST_JOIN_KEY);
     const key = { full: 'roomFull', started: 'gameStarted', kicked: 'kicked', closed: 'roomClosed' }[m.t];
     net.left = true; teardown(); net.error = key; ui.screen = 'online'; render();
   }
 }
-function clientLeave() { send(net.hostConn, { t: 'leave' }); net.left = true; setTimeout(teardown, 200); net.active = false; game = loadLocalGame(); ui.screen = 'home'; ui.modal = null; }
+/* ---- Rejoin: a banner on the main menu for a room you host or were playing in ---- */
+const LAST_JOIN_KEY = 'sitaratas.lastJoin';
+const REJOIN_MAX_AGE = 12 * 60 * 60 * 1000;
+function lastJoined() {
+  try { const j = JSON.parse(store.get(LAST_JOIN_KEY)); if (j && j.room && Date.now() - j.at < REJOIN_MAX_AGE) return j; } catch (e) {}
+  return null;
+}
+function rejoinBanner() {
+  if (!ONLINE_OK || net.active) return '';
+  const hosted = hostSavedRoom(), joined = lastJoined();
+  if (!hosted && !joined) return '';
+  const code = showCode(hosted ? hosted.room : joined.room);
+  const msg = hosted ? t('roomStillOpen', { code }) : t('gameStillOn', { code });
+  return `<div class="rejoin"><span class="rejoin-dot" aria-hidden="true"></span><span class="rejoin-text">${msg}</span>
+    <button class="btn primary" data-a="${hosted ? 'resumeRoom' : 'rejoinRoom'}">${hosted ? t('resume') : t('rejoin')}</button>
+    <button class="btn ghost sm" data-a="${hosted ? 'forgetRoom' : 'forgetJoin'}">${t('forget')}</button></div>`;
+}
+function clientLeave() { store.del(LAST_JOIN_KEY); send(net.hostConn, { t: 'leave' }); net.left = true; setTimeout(teardown, 200); net.active = false; game = loadLocalGame(); ui.screen = 'home'; ui.modal = null; }
 
 /* ---- online screens ---- */
 function onlineView() {
@@ -1714,11 +1793,15 @@ const ACHS = [
   { id: 'spotOn', icon: '🎯' }, { id: 'zero', icon: '⭕' }, { id: 'sweep', icon: '🧹' }, { id: 'fire', icon: '🔥' },
   { id: 'inferno', icon: '🌋' }, { id: 'sharp', icon: '🏹' }, { id: 'flawless', icon: '💎' }, { id: 'underdog', icon: '🐭' },
   { id: 'trumpKill', icon: '⚔️' }, { id: 'champion', icon: '🏆' }, { id: 'comeback', icon: '📈' }, { id: 'escape', icon: '🗝️' },
-  { id: 'sitaratas', icon: '🫠' }, { id: 'regular', icon: '🃏' }
+  { id: 'sitaratas', icon: '🫠' }, { id: 'regular', icon: '🃏' },
+  { id: 'nerves', icon: '🧊' }, { id: 'bigTalk', icon: '📣' }, { id: 'allIn', icon: '💯' }, { id: 'mindReader', icon: '🔮' },
+  { id: 'wildfire', icon: '☄️' }, { id: 'domination', icon: '👑' }, { id: 'photoFinish', icon: '📸' }, { id: 'landslide', icon: '🏔️' },
+  { id: 'halfHero', icon: '⏱️' }, { id: 'fullHouse', icon: '🏠' }, { id: 'robotSlayer', icon: '🤖' }, { id: 'veteran', icon: '🎖️' },
+  { id: 'hoarder', icon: '💰' }, { id: 'overachiever', icon: '🚀' }, { id: 'repeatOffender', icon: '🔁' }
 ];
 const achById = (id) => ACHS.find((a) => a.id === id);
 const achText = (id) => (TEXT[lang].achT[id] || TEXT.en.achT[id]);
-let achState = (() => { try { const s = JSON.parse(store.get(ACH_KEY)); if (s && s.u) return Object.assign({ count: 0, seen: [] }, s); } catch (e) {} return { u: {}, count: 0, seen: [] }; })();
+let achState = (() => { try { const s = JSON.parse(store.get(ACH_KEY)); if (s && s.u) return Object.assign({ count: 0, seen: [], points: 0, sitStreak: 0 }, s); } catch (e) {} return { u: {}, count: 0, seen: [], points: 0, sitStreak: 0 }; })();
 function achSave() { store.set(ACH_KEY, JSON.stringify(achState)); }
 function toast(html) {
   let box = document.getElementById('toasts');
@@ -1742,6 +1825,7 @@ function trackedSeats() {
 function unlock(id, p) {
   if (achState.u[id]) return;
   achState.u[id] = Date.now(); achSave();
+  Sfx.fx('chime');
   // On a shared device, say which player earned it.
   achToast(id, !net.active && trackedSeats().length > 1 ? game.names[p] : null);
   if (net.active) {
@@ -1766,14 +1850,23 @@ function checkAchievements() {
   for (const p of seats) {
     let run = 0, best = 0;
     H.forEach((h) => {
-      const exact = h.bids[p] === h.tricks[p];
+      const bid = h.bids[p], won = h.tricks[p], exact = bid === won;
       if (exact) unlock('spotOn', p);
-      if (exact && h.bids[p] === 0) unlock('zero', p);
-      if (h.cards >= 4 && h.bids[p] === h.cards && h.tricks[p] === h.cards) unlock('sweep', p);
+      if (exact && bid === 0) unlock('zero', p);
+      if (h.cards >= 4 && bid === h.cards && won === h.cards) unlock('sweep', p);
+      if (h.cards >= 7 && bid === 0 && won === 0) unlock('nerves', p);
+      if (exact && bid >= 6) unlock('bigTalk', p);
+      if (h.cards >= 6 && bid === h.cards && won === h.cards) unlock('allIn', p);
+      if (won - bid >= 3) unlock('overachiever', p);
       run = exact ? run + 1 : 0; best = Math.max(best, run);
     });
     if (best >= 5) unlock('sharp', p);
-    if (game.streak && game.streak.p === p) { if (game.streak.n >= 3) unlock('fire', p); if (game.streak.n >= 5) unlock('inferno', p); }
+    if (best >= 10) unlock('mindReader', p);
+    if (game.streak && game.streak.p === p) {
+      if (game.streak.n >= 3) unlock('fire', p);
+      if (game.streak.n >= 5) unlock('inferno', p);
+      if (game.streak.n >= 7) unlock('wildfire', p);
+    }
     if (r && r.phase === 'trickDone' && r.trickWinner === p) trickAch(r.trick, r.trump, p);
     if (r && r.lastTrick && r.lastTrick.winner === p) trickAch(r.lastTrick.trick, r.trump, p);
     if (game.over && H.length === game.schedule.length) {
@@ -1785,13 +1878,34 @@ function checkAchievements() {
       if (first === p && half[p] === Math.min(...half)) unlock('comeback', p);
       const late = cumulativeAfter(H, H.length - 3, n);
       if (late[p] === Math.min(...late) && loser !== p) unlock('escape', p);
+      const order = Engine.ranking(game), myPlace = order.indexOf(p);
+      if (first === p) {
+        const margin = game.totals[p] - game.totals[order[1]];
+        if (margin === 1) unlock('photoFinish', p);
+        if (margin >= 30) unlock('landslide', p);
+        if (game.half) unlock('halfHero', p);
+        if (n === 6) unlock('fullHouse', p);
+      }
+      // Total domination: at the top of the scores (a shared top counts) after every single round.
+      let top = true;
+      for (let k = 1; k <= H.length && top; k++) { const c = cumulativeAfter(H, k, n); if (c[p] < Math.max(...c)) top = false; }
+      if (top) unlock('domination', p);
+      const botsBeaten = (game.bots || []).filter((isB, b) => isB && order.indexOf(b) > myPlace).length;
+      if (botsBeaten >= 3) unlock('robotSlayer', p);
     }
   }
   if (game.over) {
     const gid = game.id || (game.names.join('|') + '|' + game.firstDealer + '|' + game.totals.join(','));
     if (!achState.seen.includes(gid)) {
-      achState.seen = achState.seen.concat(gid).slice(-100); achState.count++; achSave();
+      achState.seen = achState.seen.concat(gid).slice(-100); achState.count++;
+      // Running totals for the long-term achievements (counted from this version on).
+      achState.points += seats.reduce((s, p) => s + game.totals[p], 0);
+      achState.sitStreak = seats.includes(Engine.sitaratas(game)) ? achState.sitStreak + 1 : 0;
+      achSave();
       if (achState.count >= 10) unlock('regular', seats[0]);
+      if (achState.count >= 50) unlock('veteran', seats[0]);
+      if (achState.points >= 1000) unlock('hoarder', seats[0]);
+      if (achState.sitStreak >= 3) unlock('repeatOffender', seats[0]);
     }
   }
 }
@@ -1816,9 +1930,138 @@ function achView() {
   </div>`;
 }
 
+/* ============ SOUND (synthesised with Web Audio; off until the player turns it on) ============ */
+const SOUND_KEY = 'sitaratas.sound';
+const Sfx = (() => {
+  let ctx = null, on = store.get(SOUND_KEY) === '1';
+  function ac() {
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function noise(c, dur) {
+    const b = c.createBuffer(1, Math.max(1, Math.floor(c.sampleRate * dur)), c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = c.createBufferSource(); s.buffer = b; return s;
+  }
+  function gainEnv(c, t, attack, peak, decay) {
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+    return g;
+  }
+  function tone(c, t, freq, type, peak, dur) {
+    const o = c.createOscillator(); o.type = type; o.frequency.setValueAtTime(freq, t);
+    const g = gainEnv(c, t, 0.01, peak, dur); o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function burst(c, t, dur, type, freq, q, peak) {
+    const n = noise(c, dur), f = c.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
+    const g = gainEnv(c, t, 0.003, peak, dur); n.connect(f).connect(g).connect(c.destination); n.start(t); n.stop(t + dur + 0.02);
+    return f;
+  }
+  const sounds = {
+    card(c, t) { burst(c, t, 0.07, 'bandpass', 2300, 0.9, 0.35); tone(c, t, 180, 'sine', 0.08, 0.05); },        // card snap
+    deal(c, t, step, count) { for (let k = 0; k < Math.min(count, 40); k++) burst(c, t + (k * step) / 1000, 0.03, 'highpass', 3200, 0.7, 0.09); },
+    win(c, t) { const f = burst(c, t, 0.32, 'bandpass', 700, 1.2, 0.14); f.frequency.exponentialRampToValueAtTime(2600, t + 0.3); }, // swoosh
+    ping(c, t) { tone(c, t, 880, 'sine', 0.09, 0.18); tone(c, t + 0.09, 1320, 'sine', 0.07, 0.22); },          // your turn
+    chime(c, t) { [659, 831, 988, 1319].forEach((f, i) => tone(c, t + i * 0.08, f, 'triangle', 0.12, 0.45)); }, // exact bid / achievement
+    boom(c, t) {                                                                                                 // explosion
+      const o = c.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.55);
+      const g = gainEnv(c, t, 0.005, 0.6, 0.6); o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.7);
+      const f = burst(c, t, 0.8, 'lowpass', 3000, 0.5, 0.45); f.frequency.exponentialRampToValueAtTime(200, t + 0.8);
+    },
+    crackle(c, t) { for (let k = 0; k < 14; k++) burst(c, t + Math.random() * 0.9, 0.02, 'highpass', 1500 + Math.random() * 3000, 0.6, 0.12 + Math.random() * 0.1); } // on fire
+  };
+  function fx(name, ...args) { if (!on) return; const c = ac(); if (!c) return; try { sounds[name](c, c.currentTime + 0.01, ...args); } catch (e) {} }
+  function toggle() { on = !on; store.set(SOUND_KEY, on ? '1' : '0'); if (on) fx('ping'); }
+  return { fx, toggle, get on() { return on; } };
+})();
+/* Watch the game state between screen updates and play a sound for each new event (same for host, friends and hotseat). */
+function soundEvents() {
+  const r = game && !game.over && game.round;
+  if (!r || ui.screen !== 'game') { ui.snd = null; return; }
+  const s = { key: (game.id || '') + ':' + game.roundIdx, trick: r.trick.length, phase: r.phase, turn: r.turn,
+    streak: game.streak ? game.streak.p + ':' + game.streak.n : '', hist: game.history.length, mine: myTurn() };
+  const p = ui.snd; ui.snd = s;
+  if (!p || !Sfx.on) return;
+  if (s.key !== p.key && ui.deal && dealActive()) Sfx.fx('deal', ui.deal.step, ui.deal.total);
+  if (s.key === p.key && s.trick > p.trick) Sfx.fx('card');
+  if (s.phase === 'trickDone' && p.phase !== 'trickDone') Sfx.fx('win');
+  if (s.hist > p.hist) {
+    const h = game.history[s.hist - 1], mine = trackedSeats();
+    if (h.bids.some((b, i) => b > 3 && b === h.tricks[i])) Sfx.fx('boom');
+    else if (mine.some((i) => h.bids[i] === h.tricks[i])) Sfx.fx('chime');
+  }
+  if (game.streak && game.streak.n === 3 && s.streak !== p.streak) Sfx.fx('crackle');
+  if (s.mine && !p.mine) Sfx.fx('ping');
+}
+
+/* ============ PLAYER STATS (per device, like achievements; only humans on this device count) ============ */
+const STATS_KEY = 'sitaratas.stats.v1';
+const freshStats = () => ({ games: 0, wins: 0, sitaratas: 0, rounds: 0, exact: 0, bestStreak: 0, highScore: 0, points: 0, seenRounds: [], seenGames: [] });
+let stats = (() => { try { const s = JSON.parse(store.get(STATS_KEY)); if (s && typeof s.games === 'number') return Object.assign(freshStats(), s); } catch (e) {} return freshStats(); })();
+function saveStats() { store.set(STATS_KEY, JSON.stringify(stats)); }
+function resetStats() { stats = freshStats(); saveStats(); }
+/* Safe to call on every update: each round and each finished game is counted once. */
+function trackStats() {
+  const seats = trackedSeats(); if (!seats.length || !game) return;
+  const gid = game.id || (game.names.join('|') + '|' + game.firstDealer);
+  let changed = false;
+  game.history.forEach((h, idx) => {
+    const k = gid + ':' + idx;
+    if (stats.seenRounds.includes(k)) return;
+    stats.seenRounds.push(k); changed = true;
+    seats.forEach((p) => { stats.rounds++; if (h.bids[p] === h.tricks[p]) stats.exact++; });
+  });
+  if (game.streak && seats.includes(game.streak.p) && game.streak.n > stats.bestStreak) { stats.bestStreak = game.streak.n; changed = true; }
+  if (game.over && !stats.seenGames.includes(gid)) {
+    stats.seenGames.push(gid); changed = true;
+    const first = Engine.ranking(game)[0], loser = Engine.sitaratas(game);
+    seats.forEach((p) => {
+      stats.games++; stats.points += game.totals[p];
+      if (first === p) stats.wins++;
+      if (loser === p) stats.sitaratas++;
+      stats.highScore = Math.max(stats.highScore, game.totals[p]);
+    });
+  }
+  if (changed) {
+    stats.seenRounds = stats.seenRounds.slice(-400); stats.seenGames = stats.seenGames.slice(-100);
+    saveStats();
+  }
+}
+function statsView() {
+  const pct = (a, b) => (b ? Math.round((a / b) * 100) + '%' : '–');
+  const tiles = [
+    ['🃏', stats.games, t('stGames')],
+    ['🏆', stats.wins, t('stWins'), pct(stats.wins, stats.games)],
+    ['🫠', stats.sitaratas, t('stSitaratas'), pct(stats.sitaratas, stats.games)],
+    ['🎯', stats.exact + ' / ' + stats.rounds, t('stExact'), pct(stats.exact, stats.rounds)],
+    ['🔥', stats.bestStreak, t('stStreak')],
+    ['⭐', stats.highScore, t('stHigh')],
+    ['∅', stats.games ? Math.round(stats.points / stats.games) : '–', t('stAvg')]
+  ].map(([icon, big, label, sub]) => `<div class="stat"><span class="stat-icon" aria-hidden="true">${icon}</span>
+    <div><b class="num">${big}</b>${sub ? ` <span class="stat-sub num">${sub}</span>` : ''}<span class="hint">${label}</span></div></div>`).join('');
+  const reset = ui.statsReset
+    ? `<span class="hint">${t('stResetQ')}</span><button class="btn danger sm" data-a="statsResetYes">${t('stResetYes')}</button><button class="btn sm" data-a="statsResetNo">${t('cancel')}</button>`
+    : `<button class="btn ghost sm" data-a="statsResetAsk">${t('stReset')}</button>`;
+  return `<div class="center-col ach-page">
+    <div class="row" style="justify-content: space-between">
+      <h1 style="font-size: 36px">${t('stats')}</h1>
+      <button class="btn ghost" data-a="home">${t('back')}</button>
+    </div>
+    <span class="hint">${t('stHint')}</span>
+    <div class="stat-grid">${tiles}</div>
+    <div class="row">${reset}</div>
+  </div>`;
+}
+
 /* ============ RENDER ============ */
 function render() {
-  if (ui.screen === 'game' && game) { try { checkAchievements(); } catch (e) {} if (!game.over) trackRoundEvents(); }
+  if (ui.screen === 'game' && game) {
+    try { checkAchievements(); } catch (e) {}
+    try { trackStats(); } catch (e) {}
+    if (!game.over) trackRoundEvents();
+  }
+  try { soundEvents(); } catch (e) {}
   document.documentElement.lang = lang;
   const app = $('#app');
   const focusId = document.activeElement && document.activeElement.id;
@@ -1829,6 +2072,7 @@ function render() {
   else if (ui.screen === 'online') html = onlineView();
   else if (ui.screen === 'lobby') html = lobbyView();
   else if (ui.screen === 'ach') html = achView();
+  else if (ui.screen === 'stats') html = statsView();
   else if (!game) html = homeView();
   else if (game.over) html = endView();
   else {
@@ -1972,6 +2216,20 @@ function act(a, el) {
     case 'home': net.error = ''; joinCode = ''; ui.screen = 'home'; break;
     case 'continue': ui.screen = 'game'; resetViewer(); break;
     case 'toAch': ui.screen = 'ach'; break;
+    case 'toStats': ui.screen = 'stats'; ui.statsReset = false; break;
+    case 'statsResetAsk': ui.statsReset = true; break;
+    case 'statsResetNo': ui.statsReset = false; break;
+    case 'statsResetYes': resetStats(); ui.statsReset = false; break;
+    case 'sound': Sfx.toggle(); break;
+    case 'resumeRoom': hostStart(true); return;
+    case 'forgetRoom': store.del(HOST_KEY); break;
+    case 'rejoinRoom': {
+      const j = lastJoined(); if (!j) break;
+      joinCode = j.room;
+      if (net.name.trim()) { clientJoin(j.room); return; }
+      ui.onlineMode = 'join'; ui.screen = 'online'; break;
+    }
+    case 'forgetJoin': store.del(LAST_JOIN_KEY); break;
     case 'toHost': net.error = ''; joinCode = ''; ui.onlineMode = 'host'; ui.screen = 'online'; break;
     case 'toJoin': net.error = ''; ui.onlineMode = 'join'; ui.screen = 'online'; break;
     case 'hostNew': case 'hostResume': case 'joinGo': {
