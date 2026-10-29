@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sitaratas checks</title>
+<style>
+  :root { --bg: #f4f6f9; --fg: #17202c; --muted: #5a6577; --line: #d5dbe3; --good: #1d7f48; --bad: #c22d38; --card: #fff; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #10151c; --fg: #e7ecf3; --muted: #98a4b5; --line: #2d3846; --good: #5fd08f; --bad: #ff6b72; --card: #19202a; color-scheme: dark; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45 system-ui, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px max(16px, env(safe-area-inset-left, 0px)) 48px; }
+  h1 { margin: 0 0 6px; font-size: 28px; }
+  .summary { font-size: 20px; font-weight: 700; margin: 12px 0 20px; }
+  .summary.ok { color: var(--good); } .summary.fail { color: var(--bad); }
+  h2 { font-size: 16px; margin: 22px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: hidden; }
+  li { display: flex; gap: 10px; padding: 7px 12px; border-top: 1px solid var(--line); }
+  li:first-child { border-top: 0; }
+  .mark { width: 18px; flex: none; font-weight: 800; }
+  .ok .mark { color: var(--good); } .fail .mark { color: var(--bad); } .fail { background: rgba(194, 45, 56, .07); }
+  .info { color: var(--muted); margin-left: auto; text-align: right; font-size: 13px; }
+  #app, #toasts { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sitaratas checks</h1>
+  <div class="muted">Runs the game's own code against known situations. Nothing is saved; your stats and achievements are untouched.</div>
+  <div class="summary" id="summary">Running…</div>
+  <div id="results"></div>
+</main>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/morphdom@2.7.4/dist/morphdom-umd.min.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/bot.js"></script>
+<script src="js/text.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/online.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/app.js"></script>
+<script>
+/* ---------- test harness ---------- */
+// Never write to this browser's saved data while testing.
+store.set = () => {}; store.del = () => {};
+clearTimers();
+const results = [];
+function check(group, name, fn) {
+  try { const r = fn(); results.push({ group, name, ok: r === true, info: r === true ? '' : String(r) }); }
+  catch (e) { results.push({ group, name, ok: false, info: 'Error: ' + e.message }); }
+}
+const E = Engine;
+const playOut = (g, chooseBid, chooseCard) => {
+  while (!g.over) {
+    const r = g.round;
+    if (r.phase === 'bidding') E.placeBid(g, r.turn, chooseBid(r));
+    else if (r.phase === 'playing') E.playCard(g, r.turn, chooseCard(r));
+    else if (r.phase === 'trickDone') E.continueTrick(g);
+    else E.nextRound(g);
+  }
+  return g;
+};
+const randomBid = (r) => { const f = E.forbiddenBid(r, r.turn); const o = []; for (let b = 0; b <= r.cards; b++) if (b !== f) o.push(b); return o[Math.floor(Math.random() * o.length)]; };
+const randomCard = (r) => { const L = E.legalInfo(r, r.turn).cards; return L[Math.floor(Math.random() * L.length)]; };
+const botBid = (r) => Bot.bid(r, r.turn), botCard = (r) => Bot.play(r, r.turn);
+
+/* ---------- rules ---------- */
+const G = 'Rules';
+for (const [n, full, half] of [[3, 29, 16], [4, 26, 15], [5, 25, 15], [6, 26, 16]]) {
+  check(G, `${n} players: ${full} rounds (full), ${half} (half)`, () =>
+    E.buildSchedule(n, 'up').length === full && E.buildSchedule(n, 'down').length === full &&
+    E.buildSchedule(n, 'up', true).length === half && E.buildSchedule(n, 'down', true).length === half || 'wrong length');
+}
+check(G, '3-player schedule shape (1 → 12 → 1)', () => E.buildSchedule(3, 'up').join(',') === '1,1,1,2,3,4,5,6,7,8,9,10,11,12,12,12,11,10,9,8,7,6,5,4,3,2,1,1,1');
+check(G, 'Half game ends on the turning point', () => E.buildSchedule(4, 'up', true).slice(-4).join(',') === '9,9,9,9' && E.buildSchedule(4, 'down', true).slice(-4).join(',') === '1,1,1,1');
+check(G, 'Dealer may not make bids add up to the trick count', () => E.forbiddenBid({ cards: 4, dealer: 3, bids: [1, 1, 0, null] }, 3) === 2);
+check(G, 'Only the dealer has a forbidden bid', () => E.forbiddenBid({ cards: 4, dealer: 3, bids: [1, 1, 0, null] }, 0) === null);
+check(G, 'No forbidden bid when earlier bids already exceed the tricks', () => E.forbiddenBid({ cards: 2, dealer: 2, bids: [2, 1, null] }, 2) === null);
+const base = { trump: 'S', trick: [{ p: 0, c: 'H10' }], hands: [[], ['H6', 'S7', 'D9']] };
+check(G, 'Must follow the led suit', () => E.legalInfo(base, 1).cards.join() === 'H6');
+check(G, 'Without the led suit, must play trump', () => E.legalInfo({ ...base, hands: [[], ['S7', 'D9']] }, 1).cards.join() === 'S7');
+check(G, 'Without led suit or trump, any card', () => E.legalInfo({ ...base, hands: [[], ['C7', 'D9']] }, 1).cards.length === 2);
+check(G, 'Highest card of the led suit wins', () => E.trickWinner([{ p: 0, c: 'H10' }, { p: 1, c: 'H14' }, { p: 2, c: 'D14' }], 'S') === 1);
+check(G, 'Any trump beats the led suit', () => E.trickWinner([{ p: 0, c: 'H14' }, { p: 1, c: 'S6' }, { p: 2, c: 'S7' }], 'S') === 2);
+check(G, 'Scoring: exact = tricks + 5, missed = tricks', () => E.points(2, 2) === 7 && E.points(0, 0) === 5 && E.points(2, 3) === 3);
+check(G, 'Ranking ties go to the earlier seat', () => E.ranking({ names: ['a', 'b', 'c'], totals: [5, 9, 5] }).join() === '1,0,2');
+check(G, 'Sitaratas tie goes to the earlier seat', () => E.sitaratas({ totals: [9, 3, 3] }) === 1);
+check(G, 'Bidding out of turn is refused', () => { const g = E.newGame(['a', 'b', 'c'], 'up'); try { E.placeBid(g, (g.round.dealer + 2) % 3, 0); return 'accepted'; } catch (e) { return true; } });
+check(G, 'Playing an illegal card is refused', () => {
+  const g = E.newGame(['a', 'b', 'c', 'd'], 'down'); const r = g.round;
+  while (r.phase === 'bidding') E.placeBid(g, r.turn, randomBid(r));
+  E.playCard(g, r.turn, E.legalInfo(r, r.turn).cards[0]);
+  const illegal = r.hands[r.turn].find((c) => !E.legalInfo(r, r.turn).cards.includes(c));
+  if (!illegal) return true; // every card happened to be legal
+  try { E.playCard(g, r.turn, illegal); return 'accepted'; } catch (e) { return true; }
+});
+check(G, 'Trump indicator is never in anyone\'s hand', () => {
+  for (let i = 0; i < 50; i++) { const g = E.newGame(['a', 'b', 'c', 'd', 'e'], 'down'); const r = g.round; if (r.hands.flat().includes(r.indicator) || r.trump !== r.indicator[0]) return 'bad indicator'; }
+  return true;
+});
+check(G, '200 random full games stay consistent', () => {
+  for (let k = 0; k < 200; k++) {
+    const n = 3 + (k % 4), g = E.newGame(Array.from({ length: n }, (_, i) => 'P' + i), k % 2 ? 'up' : 'down', k % 3 === 0);
+    playOut(g, randomBid, randomCard);
+    if (g.history.length !== g.schedule.length) return 'round count, game ' + k;
+    if (!g.history.every((h) => h.tricks.reduce((a, b) => a + b, 0) === h.cards)) return 'tricks ≠ cards, game ' + k;
+    if (!g.history.every((h) => h.bids.reduce((a, b) => a + b, 0) !== h.cards)) return 'bids added up to tricks, game ' + k;
+    if (!g.history.every((h, i) => h.dealer === (g.firstDealer + i) % n)) return 'dealer order, game ' + k;
+  }
+  return true;
+});
+check(G, 'Trick streak follows consecutive winners', () => {
+  for (let k = 0; k < 30; k++) {
+    const g = E.newGame(['a', 'b', 'c', 'd'], 'down'); let prev = null, run = 0;
+    while (!g.over) { const r = g.round;
+      if (r.phase === 'bidding') E.placeBid(g, r.turn, botBid(r));
+      else if (r.phase === 'playing') { E.playCard(g, r.turn, botCard(r)); if (r.phase === 'trickDone') { run = r.trickWinner === prev ? run + 1 : 1; prev = r.trickWinner; if (g.streak.p !== prev || g.streak.n !== run) return 'mismatch'; } }
+      else if (r.phase === 'trickDone') E.continueTrick(g); else E.nextRound(g); }
+  }
+  return true;
+});
+
+/* ---------- bots ---------- */
+const B = 'Bots';
+check(B, 'Bots only make legal moves (200 games)', () => { for (let k = 0; k < 200; k++) playOut(E.newGame(Array.from({ length: 3 + (k % 4) }, (_, i) => 'P' + i), 'up'), botBid, botCard); return true; });
+check(B, 'Bots hit their exact bid clearly more often than random play', () => {
+  let made = 0, total = 0, rMade = 0, rTotal = 0;
+  for (let k = 0; k < 120; k++) {
+    const g = playOut(E.newGame(['a', 'b', 'c', 'd'], 'up'), botBid, botCard);
+    g.history.forEach((h) => h.bids.forEach((b, i) => { total++; if (b === h.tricks[i]) made++; }));
+    const g2 = playOut(E.newGame(['a', 'b', 'c', 'd'], 'up'), randomBid, randomCard);
+    g2.history.forEach((h) => h.bids.forEach((b, i) => { rTotal++; if (b === h.tricks[i]) rMade++; }));
+  }
+  const bot = made / total, rnd = rMade / rTotal;
+  return bot > rnd + 0.15 || `bots ${(bot * 100).toFixed(0)}% vs random ${(rnd * 100).toFixed(0)}%`;
+});
+
+/* ---------- achievements ---------- */
+const A = 'Achievements';
+const freshAch = () => { achState = { u: {}, count: 0, seen: [], points: 0, sitStreak: 0 }; };
+const row = (cards, bids, tricks) => ({ cards, bids, tricks, points: bids.map((b, i) => tricks[i] + (b === tricks[i] ? 5 : 0)) });
+function finished(n, rows, opts = {}) {
+  const g = E.newGame(Array.from({ length: n }, (_, i) => (i ? 'B' + i : 'Me')), 'up', opts.half);
+  g.bots = Array.from({ length: n }, (_, i) => i > 0 && opts.bots !== false);
+  g.history = rows; g.schedule = rows.map((r) => r.cards); g.totals = Array(n).fill(0);
+  rows.forEach((h) => h.points.forEach((x, i) => { g.totals[i] += x; }));
+  g.over = true; g.round = null; g.roundIdx = rows.length; g.streak = opts.streak || null; g.id = opts.id || g.id;
+  return g;
+}
+const unlocked = (...ids) => { const missing = ids.filter((id) => !achState.u[id]); return missing.length ? 'missing: ' + missing.join(', ') : true; };
+const locked = (...ids) => { const extra = ids.filter((id) => achState.u[id]); return extra.length ? 'should be locked: ' + extra.join(', ') : true; };
+function achCheck(name, setup, expectOn, expectOff = []) {
+  check(A, name, () => { freshAch(); game = setup(); checkAchievements(); const a = unlocked(...expectOn); if (a !== true) return a; return locked(...expectOff); });
+}
+achCheck('Round achievements (exact, zero, sweep, nerves, big talker, all in, overachiever)',
+  () => finished(3, [row(7, [0, 4, 2], [0, 4, 3]), row(6, [6, 0, 0], [6, 0, 0]), row(9, [1, 4, 3], [4, 3, 2])]),
+  ['spotOn', 'zero', 'sweep', 'nerves', 'bigTalk', 'allIn', 'overachiever']);
+achCheck('Exact-bid runs (Sharpshooter at 5, Mind reader at 10)', () => finished(3, Array.from({ length: 10 }, () => row(3, [1, 1, 0], [1, 1, 1]))), ['sharp', 'mindReader']);
+achCheck('Mind reader needs 10 in a row', () => finished(3, Array.from({ length: 9 }, () => row(3, [1, 1, 0], [1, 1, 1]))), ['sharp'], ['mindReader']);
+achCheck('Trick streaks (On fire 3, Inferno 5, Wildfire 7)', () => finished(3, [row(1, [0, 0, 1], [0, 0, 1])], { streak: { p: 0, n: 7 } }), ['fire', 'inferno', 'wildfire']);
+achCheck('Streak of 4 does not give Inferno', () => finished(3, [row(1, [0, 0, 1], [0, 0, 1])], { streak: { p: 0, n: 4 } }), ['fire'], ['inferno']);
+check(A, 'Trick achievements (Underdog, Trump killer)', () => {
+  freshAch(); game = E.newGame(['Me', 'B1', 'B2', 'B3'], 'down'); game.bots = [false, true, true, true];
+  Object.assign(game.round, { phase: 'trickDone', trump: 'S', trickWinner: 0, trick: [{ p: 0, c: 'S6' }, { p: 1, c: 'H14' }, { p: 2, c: 'H9' }, { p: 3, c: 'H10' }] });
+  checkAchievements(); return unlocked('underdog', 'trumpKill');
+});
+// Me: tied last (6) at the halfway point, then +9 ×3 = 33 beats B1 (32) → Champion and Comeback.
+achCheck('Win and comeback (not flawless)', () => finished(3, [row(3, [1, 1, 1], [0, 1, 2]), row(3, [1, 1, 1], [0, 1, 2]), row(3, [1, 0, 0], [1, 0, 2]), row(4, [4, 0, 0], [4, 0, 0]), row(4, [4, 0, 0], [4, 0, 0]), row(4, [4, 0, 0], [4, 0, 0])]), ['champion', 'comeback'], ['flawless']);
+achCheck('Flawless: every bid made', () => finished(3, [1, 2, 3].map(() => row(3, [1, 1, 1], [1, 1, 1]))), ['flawless']);
+achCheck('Sitaratas when you finish last', () => finished(3, [row(3, [1, 1, 1], [0, 1, 2])]), ['sitaratas'], ['champion']);
+// Me: 0 after 3 rounds (last), then +8 ×3 = 24; B1 ends 33, B2 ends 21 → B2 is the Sitaratas.
+achCheck('Escape artist: last with 3 to go, not the Sitaratas', () => finished(3, [row(3, [3, 1, 1], [0, 1, 2]), row(3, [3, 1, 1], [0, 1, 2]), row(3, [3, 1, 1], [0, 1, 2]), row(3, [3, 0, 0], [3, 0, 0]), row(3, [3, 0, 0], [3, 0, 0]), row(3, [3, 0, 0], [3, 0, 0])]), ['escape'], ['sitaratas']);
+achCheck('Photo finish: win by exactly 1', () => finished(3, [{ cards: 2, bids: [1, 0, 0], tricks: [1, 0, 1], points: [6, 5, 1] }]), ['photoFinish'], ['landslide']);
+achCheck('Landslide: win by 30+', () => finished(3, Array.from({ length: 5 }, () => row(4, [4, 1, 1], [4, 0, 0]))), ['landslide', 'domination']);
+achCheck('Total domination fails if you drop below anyone', () => finished(3, [row(3, [0, 3, 0], [0, 3, 0]), row(3, [3, 0, 0], [3, 0, 0])]), ['champion'], ['domination']);
+achCheck('Half-time hero, Robot slayer', () => finished(4, [row(3, [1, 0, 0, 0], [1, 1, 1, 0])], { half: true }), ['halfHero', 'robotSlayer']);
+achCheck('Full house: win with 6 players', () => finished(6, [row(6, [6, 0, 0, 0, 0, 0], [6, 0, 0, 0, 0, 0])]), ['fullHouse']);
+achCheck('Bots never earn achievements', () => { const g = finished(3, [row(5, [0, 5, 0], [0, 5, 0])], { streak: { p: 1, n: 7 } }); g.totals = [5, 50, 5]; return g; }, [], ['bigTalk', 'wildfire', 'allIn']);
+check(A, 'Long-term: Regular, Veteran, Point hoarder, Repeat offender', () => {
+  freshAch(); achState.count = 48;
+  for (let i = 0; i < 3; i++) { game = finished(3, [row(3, [3, 0, 0], [0, 1, 2])], { id: 'loss' + i }); game.totals = [400, 500, 600]; checkAchievements(); checkAchievements(); }
+  if (achState.count !== 51) return 'games counted ' + achState.count + ' (expected 51)';
+  return unlocked('regular', 'veteran', 'hoarder', 'repeatOffender');
+});
+check(A, 'Repeat offender streak resets after a game you don\'t lose', () => {
+  freshAch(); achState.sitStreak = 2; game = finished(3, [row(3, [1, 0, 3], [1, 2, 0])], { id: 'won' }); checkAchievements();
+  return achState.sitStreak === 0 || 'streak ' + achState.sitStreak;
+});
+check(A, 'Every achievement has English and Estonian text', () => ACHS.every((a) => TEXT.en.achT[a.id] && TEXT.et.achT[a.id]) || 'missing text');
+
+/* ---------- stats ---------- */
+const S = 'Stats';
+check(S, 'A game is counted once, however often it is checked', () => {
+  stats = freshStats();
+  game = finished(4, Array.from({ length: 5 }, () => row(3, [1, 1, 0, 0], [1, 1, 1, 0])), { id: 'statgame' });
+  for (let i = 0; i < 5; i++) trackStats();
+  return (stats.games === 1 && stats.rounds === 5 && stats.exact === 5) || JSON.stringify({ g: stats.games, r: stats.rounds, e: stats.exact });
+});
+check(S, 'Wins, Sitaratas count and high score', () => {
+  stats = freshStats(); game = finished(3, [row(3, [3, 0, 0], [3, 0, 0])], { id: 'statwin' }); trackStats();
+  return (stats.wins === 1 && stats.sitaratas === 0 && stats.highScore === 8) || JSON.stringify(stats);
+});
+
+/* ---------- online (no network needed) ---------- */
+const O = 'Online';
+function fakeHost() {
+  net.active = true; net.isHost = true; net.phase = 'game'; net.room = 'TEST42';
+  game = E.newGame(['Host', 'Ann', 'Ben', 'Bot'], 'down'); game.bots = [false, false, false, true];
+  net.seats = [{ kind: 'host', name: 'Host', token: 't0', connected: true }, { kind: 'human', name: 'Ann', token: 't1', connected: true, peerId: 'p1' },
+    { kind: 'human', name: 'Ben', token: 't2', connected: true, peerId: 'p2' }, { kind: 'bot' }];
+}
+function resetNet() { Object.assign(net, { active: false, isHost: false, phase: 'lobby', seats: [], room: null }); game = null; }
+check(O, 'Friends only receive their own cards', () => {
+  fakeHost(); const v = hostMsg(1).view.round.hands; resetNet();
+  return (v[1].every((c) => c !== 'X0') && v[0].every((c) => c === 'X0') && v[2].every((c) => c === 'X0')) || 'other hands visible';
+});
+check(O, 'Only the successor gets the handover backup', () => {
+  fakeHost(); const a = hostMsg(1).backup, b = hostMsg(2).backup; resetNet();
+  return (!!a && b === null && a.game && a.seats.length === 4) || 'backup went to the wrong player';
+});
+check(O, 'Next successor is chosen when the first one disconnects', () => {
+  fakeHost(); net.seats[1].connected = false; const s = successorIdx(); resetNet();
+  return s === 2 || 'successor ' + s;
+});
+check(O, 'Lobby seat list never includes seat keys', () => {
+  fakeHost(); net.phase = 'lobby'; const m = hostMsg(2); resetNet();
+  return !JSON.stringify(m.seats).includes('t1') || 'token leaked';
+});
+
+/* ---------- screens ---------- */
+const U = 'Screens';
+const screen = (name, prep) => check(U, `Draws without errors: ${name}`, () => { prep(); render(); clearTimers(); return document.getElementById('app').innerHTML.length > 100 || 'empty screen'; });
+screen('main menu', () => { resetNet(); game = null; ui.modal = null; ui.screen = 'home'; });
+screen('offline setup', () => { ui.screen = 'setup'; });
+screen('host and join', () => { ui.onlineMode = 'host'; ui.screen = 'online'; render(); ui.onlineMode = 'join'; });
+screen('player page (stats and achievements)', () => { ui.screen = 'player'; ui.playerTab = 'stats'; render(); ui.playerTab = 'ach'; });
+screen('settings panel', () => { ui.screen = 'home'; ui.modal = 'settings'; });
+screen('game: bidding, playing, trick won, round end', () => {
+  ui.modal = null; game = E.newGame(['Me', 'B1', 'B2', 'B3'], 'down'); game.bots = [false, true, true, true]; ui.screen = 'game'; ui.viewer = 0;
+  const r = game.round; render();
+  while (r.phase === 'bidding') E.placeBid(game, r.turn, botBid(r)); render();
+  for (let k = 0; k < 4; k++) E.playCard(game, r.turn, botCard(r)); render();
+  while (r.phase !== 'roundDone') { if (r.phase === 'playing') E.playCard(game, r.turn, botCard(r)); else E.continueTrick(game); }
+});
+screen('final results', () => { playOut(game, botBid, botCard); });
+
+/* ---------- report ---------- */
+clearTimers(); ui.screen = 'home'; game = null;
+const failed = results.filter((r) => !r.ok);
+const sum = document.getElementById('summary');
+sum.textContent = failed.length ? `${failed.length} of ${results.length} checks failed` : `All ${results.length} checks passed`;
+sum.className = 'summary ' + (failed.length ? 'fail' : 'ok');
+const groups = [...new Set(results.map((r) => r.group))];
+document.getElementById('results').innerHTML = groups.map((g) => `<h2>${g}</h2><ul>${results.filter((r) => r.group === g).map((r) =>
+  `<li class="${r.ok ? 'ok' : 'fail'}"><span class="mark">${r.ok ? '✓' : '✗'}</span><span>${esc(r.name)}</span>${r.info ? `<span class="info">${esc(r.info)}</span>` : ''}</li>`).join('')}</ul>`).join('');
+window.testResults = results;
+</script>
+</body>
+</html>
