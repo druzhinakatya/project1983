@@ -139,16 +139,6 @@ h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-he
 .profile { display: flex; gap: 16px; align-items: center; padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); }
 .av { flex: none; display: inline-grid; place-items: center; border-radius: 50%; color: #fff; font-family: var(--display); font-weight: 800; line-height: 1; width: 34px; height: 34px; font-size: 17px; user-select: none; }
 .av.avatar { width: 64px; height: 64px; font-size: 30px; box-shadow: 0 0 0 4px var(--accent-soft); }
-.av.av-sm { width: 34px; height: 34px; font-size: 17px; }
-.av.av-xs { width: 20px; height: 20px; font-size: 11px; }
-.profile { flex-wrap: wrap; }
-.av-picker { flex-basis: 100%; display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
-.av-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.av-pick { padding: 3px; border-radius: 50%; border: 2px solid transparent; background: none; cursor: pointer; line-height: 0; transition: transform .15s ease, border-color .15s ease; }
-.av-pick:hover { transform: scale(1.08); }
-.av-pick[aria-pressed="true"] { border-color: var(--accent); }
-.player-link { display: inline-flex; align-items: center; gap: 6px; }
-.plate-top .av-xs, .lseat .av-xs { margin-right: 2px; }
 .profile-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .profile-name { font-family: var(--display); font-weight: 800; font-size: 20px; padding: 6px 10px; }
 .player-tabs { align-self: flex-start; }
@@ -778,7 +768,7 @@ const TEXT = {
     backToLobby: 'Back to lobby', nextTrickSoon: 'Next trick in a moment…', waitingPlayer: 'Waiting for {name}…', playersLbl: 'Seats',
     soundOn: 'Sound on', soundOff: 'Sound off', stats: 'Stats', cancel: 'Cancel',
     settings: 'Settings', soundLbl: 'Sound', languageLbl: 'Language', appearance: 'Appearance', light: 'Light', dark: 'Dark', auto: 'Auto', on: 'On', off: 'Off',
-    player: 'Player', picture: 'Profile picture', namePlaceholder: 'Type your name', playerSummary: 'Games {g} · Wins {w} · Achievements {a}/{t}',
+    player: 'Player', namePlaceholder: 'Type your name', playerSummary: 'Games {g} · Wins {w} · Achievements {a}/{t}',
     playerHint: 'Your name, stats and achievements are saved on this device. The name is also used when you play online.',
     roomStillOpen: 'Your room {code} is still open', gameStillOn: 'You were playing in room {code}', resume: 'Resume', rejoin: 'Rejoin', forget: 'Dismiss',
     stGames: 'Games played', stWins: 'Wins', stSitaratas: 'Times the Sitaratas', stExact: 'Exact bids', stStreak: 'Longest trick streak',
@@ -884,7 +874,7 @@ const TEXT = {
     backToLobby: 'Tagasi ootetuppa', nextTrickSoon: 'Järgmine tihi kohe…', waitingPlayer: 'Ootan mängijat {name}…', playersLbl: 'Kohad',
     soundOn: 'Heli sees', soundOff: 'Heli väljas', stats: 'Statistika', cancel: 'Tühista',
     settings: 'Seaded', soundLbl: 'Heli', languageLbl: 'Keel', appearance: 'Välimus', light: 'Hele', dark: 'Tume', auto: 'Automaatne', on: 'Sees', off: 'Väljas',
-    player: 'Mängija', picture: 'Profiilipilt', namePlaceholder: 'Sisesta oma nimi', playerSummary: 'Mänge {g} · Võite {w} · Saavutusi {a}/{t}',
+    player: 'Mängija', namePlaceholder: 'Sisesta oma nimi', playerSummary: 'Mänge {g} · Võite {w} · Saavutusi {a}/{t}',
     playerHint: 'Sinu nimi, statistika ja saavutused salvestatakse selles seadmes. Nime kasutatakse ka võrgus mängides.',
     roomStillOpen: 'Sinu tuba {code} on veel avatud', gameStillOn: 'Sa mängisid toas {code}', resume: 'Jätka', rejoin: 'Liitu uuesti', forget: 'Peida',
     stGames: 'Mängitud mänge', stWins: 'Võite', stSitaratas: 'Kordi Sitaratas', stExact: 'Täpseid pakkumisi', stStreak: 'Pikim tihiseeria',
@@ -1023,7 +1013,7 @@ function homeView() {
         ${ONLINE_OK ? menuOpt('toHost', '+', 'hostGame', 'hostOptHint') + menuOpt('toJoin', '#', 'joinGame', 'joinOptHint') : ''}
       </div>
       <div class="linkrow">
-        <button class="btn ghost player-link" data-a="toPlayer">${avatarHTML(myAvatar, net.name, 'av-xs')} ${t('player')} <span class="hint num">🏆 ${ACHS.filter((a) => achState.u[a.id]).length}/${ACHS.length}</span></button>
+        <button class="btn ghost" data-a="toPlayer">👤 ${t('player')} <span class="hint num">🏆 ${ACHS.filter((a) => achState.u[a.id]).length}/${ACHS.length}</span></button>
         <button class="btn ghost" data-a="rules">${t('rules')}</button>
       </div>
       <ul class="feats">${feats}</ul>
@@ -1193,7 +1183,7 @@ function tableScene() {
     return `${boom}<div class="plate ${r.turn === i ? 'turn' : ''} ${won ? 'won' : ''} ${streak ? 'fire' : ''} ${result} ${state}" id="plate-${i}" style="left:${p.x}%;top:${p.y}%" ${streak ? `title="${esc(t('onFire', { n: streak }))}"` : ''}>
       ${bubble}
       ${react ? `<span class="react-bubble" data-anim="rb${react.at}" aria-hidden="true">${react.e}</span>` : ''}
-      <div class="plate-top">${game.avatars && game.avatars[i] ? avatarHTML(game.avatars[i], nm, 'av-xs') : ''}<span class="seat-name">${esc(nm)}${me ? ` <span class="hint">(${t('you')})</span>` : ''}</span>${chips}${resChip}</div>
+      <div class="plate-top"><span class="seat-name">${esc(nm)}${me ? ` <span class="hint">(${t('you')})</span>` : ''}</span>${chips}${resChip}</div>
       <div class="plate-stats num">
         <span><span class="label"><span class="wide-only">${t('bid')}</span><span class="narrow-only">${t('bidS')}</span></span> <b>${bid == null ? '–' : bid}</b></span>
         <span><span class="label"><span class="wide-only">${t('tricks')}</span><span class="narrow-only">${t('wonS')}</span></span> <b class="tricks-val">${tr}</b></span>
@@ -1381,24 +1371,6 @@ function endView() {
   </div>`;
 }
 
-/* ============ PROFILE PICTURES ============ */
-/* A white symbol on a coloured circle. 'initial' (the default) shows the first letter of the name. */
-const AVATARS = [
-  { id: 'spade', g: '♠', bg: '#2a4fa8' }, { id: 'heart', g: '♥', bg: '#c22d38' }, { id: 'diamond', g: '♦', bg: '#e0661c' },
-  { id: 'club', g: '♣', bg: '#1f7a48' }, { id: 'star', g: '★', bg: '#6f42c1' }, { id: 'moon', g: '☾', bg: '#334a8f' },
-  { id: 'cross', g: '✚', bg: '#d99200' }, { id: 'crown', g: '♛', bg: '#a53c9e' }, { id: 'flower', g: '✿', bg: '#d23f73' },
-  { id: 'triangle', g: '▲', bg: '#0f8193' }, { id: 'spark', g: '✦', bg: '#2f8a3c' }, { id: 'dot', g: '●', bg: '#4b5563' }
-];
-const AVATAR_KEY = 'sitaratas.avatar';
-const validAvatar = (id) => (id === 'initial' || AVATARS.some((a) => a.id === id) ? id : 'initial');
-let myAvatar = validAvatar(store.get(AVATAR_KEY));
-function avatarHTML(id, name, cls) {
-  const a = AVATARS.find((x) => x.id === id);
-  const letter = String(name || '').trim()[0];
-  const glyph = a ? a.g : (letter ? esc(letter.toUpperCase()) : '🃏');
-  return `<span class="av ${cls || ''}" style="background:${a ? a.bg : 'var(--accent)'}" aria-hidden="true">${glyph}</span>`;
-}
-
 /* ============ THEME ============ */
 const THEME_KEY = 'sitaratas.theme';
 let themeMode = store.get(THEME_KEY); // 'light' | 'dark' | null (follow system)
@@ -1489,7 +1461,7 @@ function showReact(seat, e) {
 /* ---- host ---- */
 const hostIdx = () => net.seats.findIndex((s) => s.kind === 'host');
 const pausedSeats = () => net.seats.map((s, i) => (s.kind === 'human' && !s.connected ? i : -1)).filter((i) => i >= 0);
-function publicSeat(s) { return { kind: s.kind, name: s.name || '', avatar: s.avatar || 'initial', ready: !!s.ready, connected: s.kind !== 'human' || !!s.connected }; }
+function publicSeat(s) { return { kind: s.kind, name: s.name || '', ready: !!s.ready, connected: s.kind !== 'human' || !!s.connected }; }
 function redact(g, seat) {
   const v = JSON.parse(JSON.stringify(g));
   if (v.round) v.round.hands = v.round.hands.map((h, k) => (k === seat ? h : h.map(() => 'X0')));
@@ -1503,7 +1475,7 @@ function hostBroadcast() {
   net.seats.forEach((s, i) => { if (s.kind === 'human' && s.peerId && net.conns[s.peerId]) send(net.conns[s.peerId], hostMsg(i)); });
 }
 function hostSave() {
-  const seats = net.seats.map((s) => ({ kind: s.kind, name: s.name, avatar: s.avatar, token: s.token, ready: s.ready }));
+  const seats = net.seats.map((s) => ({ kind: s.kind, name: s.name, token: s.token, ready: s.ready }));
   store.set(HOST_KEY, JSON.stringify({ room: net.room, seats, settings: net.settings, phase: net.phase, game: net.phase === 'game' ? game : null }));
 }
 function hostChanged() { hostSave(); hostBroadcast(); render(); }
@@ -1518,11 +1490,11 @@ async function hostStart(resume) {
     net.seats = sv.seats.map((s) => ({ ...s, connected: s.kind === 'host', peerId: null }));
     game = sv.game;
     if (net.phase === 'game' && !game) net.phase = 'lobby';
-    const h = net.seats[hostIdx()]; if (h) { net.name = h.name; h.avatar = myAvatar; }
+    const h = net.seats[hostIdx()]; if (h) net.name = h.name;
   } else {
     net.room = genCode(); net.phase = 'lobby'; game = null;
     net.settings = { count: 4, order: 'up' };
-    net.seats = [{ kind: 'host', name: cleanName(net.name), avatar: myAvatar, connected: true, ready: true }];
+    net.seats = [{ kind: 'host', name: cleanName(net.name), connected: true, ready: true }];
     while (net.seats.length < net.settings.count) net.seats.push({ kind: 'open' });
   }
   Object.assign(net, { active: true, isHost: true, conns: {}, reacts: {} });
@@ -1557,20 +1529,18 @@ const seatOfConn = (conn) => net.seats.findIndex((s) => s.peerId === conn.peer &
 function hostOnMessage(conn, m) {
   if (!m || typeof m !== 'object' || !net.active || !net.isHost) return;
   if (m.t === 'hello') {
-    const token = String(m.token || '').slice(0, 40), name = cleanName(m.name), avatar = validAvatar(String(m.avatar || ''));
+    const token = String(m.token || '').slice(0, 40), name = cleanName(m.name);
     let i = token ? net.seats.findIndex((s) => s.token === token) : -1;
     if (i >= 0) {
       const s = net.seats[i];
       if (s.peerId && s.peerId !== conn.peer && net.conns[s.peerId]) { const old = net.conns[s.peerId]; delete net.conns[s.peerId]; try { old.close(); } catch (e) {} }
       s.peerId = conn.peer; s.connected = true;
-      s.avatar = avatar;
       if (net.phase === 'lobby') { s.name = name; s.kind = 'human'; }
-      else if (game && game.avatars) game.avatars[i] = avatar;
       else if (s.kind === 'bot') { s.kind = 'human'; game.bots[i] = false; }
     } else if (net.phase === 'lobby') {
       i = net.seats.findIndex((s) => s.kind === 'open');
       if (i < 0) { send(conn, { t: 'full' }); setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); return; }
-      net.seats[i] = { kind: 'human', name, avatar, token, peerId: conn.peer, connected: true, ready: false };
+      net.seats[i] = { kind: 'human', name, token, peerId: conn.peer, connected: true, ready: false };
     } else { send(conn, { t: 'started' }); setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); return; }
     net.conns[conn.peer] = conn;
     hostChanged();
@@ -1644,7 +1614,6 @@ function hostAct(a, el) {
       const names = S.map((s, k) => (s.kind === 'bot' ? 'Bot ' + (k + 1) : s.name));
       game = Engine.newGame(names, net.settings.order, net.settings.half);
       game.bots = S.map((s) => s.kind === 'bot');
-      game.avatars = S.map((s) => (s.kind === 'bot' ? null : validAvatar(s.kind === 'host' ? myAvatar : s.avatar)));
       net.phase = 'game'; net.mySeat = hostIdx(); ui.viewer = net.mySeat; ui.screen = 'game';
       ui.selBid = null; ui.selCard = null; clearTimers(); break;
     }
@@ -1695,7 +1664,7 @@ function clientConnect() {
   conn.on('open', () => {
     if (net.hostConn !== conn) return;
     net.hostOk = true; net.everConnected = true; net.status = '';
-    send(conn, { t: 'hello', token: net.token, name: cleanName(net.name), avatar: myAvatar });
+    send(conn, { t: 'hello', token: net.token, name: cleanName(net.name) });
     render();
   });
   conn.on('data', (m) => { if (net.hostConn === conn) clientOnMessage(m); });
@@ -1795,8 +1764,7 @@ function lobbyView() {
       if (s.kind === 'bot') ctl += `<button class="btn sm" data-a="oOpen" data-i="${i}">${t('removeBot')}</button>`;
       if (s.kind === 'human') ctl += `<button class="btn sm danger" data-a="oKick" data-i="${i}">${t('kick')}</button>`;
     }
-    const av = s.kind === 'human' || s.kind === 'host' ? avatarHTML(s.kind === 'host' && host ? myAvatar : s.avatar, s.name, 'av-xs') : '';
-    return `<div class="lseat"><span class="seatno num">${i + 1}</span>${av}<span class="lname">${nm}</span>${chip}<span class="lctl">${ctl}</span></div>`;
+    return `<div class="lseat"><span class="seatno num">${i + 1}</span><span class="lname">${nm}</span>${chip}<span class="lctl">${ctl}</span></div>`;
   }).join('');
   const settingsHTML = host
     ? `<div class="row" style="gap:18px"><div class="field"><span class="label">${t('players')}</span><div class="seg">${[3, 4, 5, 6].map((k) => `<button type="button" data-a="oCount" data-v="${k}" aria-pressed="${k === n}">${k}</button>`).join('')}</div></div>
@@ -2109,22 +2077,20 @@ function statsSection() {
 function playerView() {
   const got = ACHS.filter((a) => achState.u[a.id]).length;
   const summary = t('playerSummary', { g: stats.games, w: stats.wins, a: got, t: ACHS.length });
-  const picks = ['initial', ...AVATARS.map((a) => a.id)].map((id) =>
-    `<button type="button" class="av-pick" data-a="pickAvatar" data-v="${id}" aria-pressed="${id === myAvatar}" aria-label="${id}">${avatarHTML(id, net.name, 'av-sm')}</button>`).join('');
+  const name = net.name.trim();
+  const initial = name ? esc(name[0].toUpperCase()) : '🃏';
   return `<div class="center-col ach-page player-page">
     <div class="row" style="justify-content: space-between">
       <h1 style="font-size: 36px">${t('player')}</h1>
       <button class="btn ghost" data-a="home">${t('back')}</button>
     </div>
     <div class="profile">
-      ${avatarHTML(myAvatar, net.name, 'avatar')}
+      <span class="av avatar" style="background:var(--accent)" aria-hidden="true">${initial}</span>
       <div class="profile-body">
         <label class="label" for="playerName">${t('yourName')}</label>
         <input class="text-in profile-name" id="playerName" maxlength="16" value="${esc(net.name)}" placeholder="${esc(t('namePlaceholder'))}" autocomplete="nickname">
         <span class="hint num">${summary}</span>
-      </div>
-      <div class="av-picker"><span class="label">${t('picture')}</span><div class="av-row">${picks}</div></div>
-    </div>
+      </div>    </div>
     <div class="player-tabs seg">
       <button type="button" data-a="playerTab" data-v="stats" aria-pressed="${ui.playerTab !== 'ach'}">📊 ${t('stats')}</button>
       <button type="button" data-a="playerTab" data-v="ach" aria-pressed="${ui.playerTab === 'ach'}">🏆 ${t('achievements')} <span class="num">${got}/${ACHS.length}</span></button>
@@ -2284,9 +2250,6 @@ function startGame(names, order, bots, half) {
   clearTimers();
   game = Engine.newGame(names, order, half);
   game.bots = bots.slice(0, names.length);
-  // On one device: if you're the only human, your picture goes on your seat; with several humans each gets their initial.
-  const humanSeats = game.bots.map((b, i) => (b ? -1 : i)).filter((i) => i >= 0);
-  game.avatars = game.bots.map((b) => (b ? null : humanSeats.length === 1 ? myAvatar : 'initial'));
   ui.screen = 'game'; resetViewer(); ui.selBid = null; ui.selCard = null; ui.modal = null;
   save(); render();
 }
@@ -2299,7 +2262,6 @@ function act(a, el) {
     case 'continue': ui.screen = 'game'; resetViewer(); break;
     case 'toPlayer': ui.screen = 'player'; ui.statsReset = false; break;
     case 'playerTab': ui.playerTab = el.dataset.v; ui.statsReset = false; break;
-    case 'pickAvatar': myAvatar = validAvatar(el.dataset.v); store.set(AVATAR_KEY, myAvatar); break;
     case 'statsResetAsk': ui.statsReset = true; break;
     case 'statsResetNo': ui.statsReset = false; break;
     case 'statsResetYes': resetStats(); ui.statsReset = false; break;
