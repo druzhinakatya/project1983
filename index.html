@@ -488,11 +488,13 @@ const Engine = (() => {
   const rank = (c) => +c.slice(1);
   const maxHand = (n) => Math.floor(36 / n);
 
-  function buildSchedule(n, order) {
+  /* half: play only the first leg (1 → max, or max → 1), ending on the repeated turning-point rounds. */
+  function buildSchedule(n, order, half) {
     const m = maxHand(n);
     const up = []; for (let c = 2; c < m; c++) up.push(c);
     const down = up.slice().reverse();
     const ones = Array(n).fill(1), maxes = Array(n).fill(m);
+    if (half) return order === 'up' ? [...ones, ...up, ...maxes] : [...maxes, ...down, ...ones];
     return order === 'up'
       ? [...ones, ...up, ...maxes, ...down, ...ones]
       : [...maxes, ...down, ...ones, ...up, ...maxes];
@@ -500,10 +502,10 @@ const Engine = (() => {
   function makeDeck() { const d = []; for (const s of SUITS) for (let r = 6; r <= 14; r++) d.push(s + r); return d; }
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-  function newGame(names, order) {
+  function newGame(names, order, half) {
     const n = names.length;
     if (n < 3 || n > 6) throw new Error('3–6 players');
-    const g = { v: 1, id: Math.random().toString(36).slice(2) + Date.now().toString(36), names: names.slice(), order, schedule: buildSchedule(n, order), firstDealer: rand(n),
+    const g = { v: 1, id: Math.random().toString(36).slice(2) + Date.now().toString(36), names: names.slice(), order, half: !!half, schedule: buildSchedule(n, order, half), firstDealer: rand(n),
       roundIdx: 0, totals: Array(n).fill(0), history: [], over: false, round: null };
     startRound(g);
     return g;
@@ -737,7 +739,7 @@ const TEXT = {
     leaveQ: 'Leave this game?', leaveBody: 'The game pauses until you come back through the same invite link, or until the host replaces you with a bot.',
     nextOnline: 'Next round starts automatically.', lastOnline: 'Final results follow.', waitHostAgain: 'Waiting for the host to start another game.',
     backToLobby: 'Back to lobby', nextTrickSoon: 'Next trick in a moment…', waitingPlayer: 'Waiting for {name}…', playersLbl: 'Seats',
-    bidS: 'Bid', wonS: 'Won', ptsS: 'Pts',
+    bidS: 'Bid', wonS: 'Won', ptsS: 'Pts', gameLength: 'Game length', fullGame: 'Full game', halfGame: 'Half game',
     onFire: 'On fire: {n} tricks in a row', roundComplete: 'Round {i} complete', dealingNext: 'Dealing the next round…', halfway: 'Halfway there',
     achievements: 'Achievements', achUnlocked: 'Achievement unlocked', achOther: 'unlocked', achLocked: 'Locked',
     achProgress: '{n} / {t} unlocked', achHint: 'Saved on this device. Bots don’t earn them.',
@@ -820,7 +822,7 @@ const TEXT = {
     leaveQ: 'Lahkuda mängust?', leaveBody: 'Mäng peatub, kuni naased sama kutselingiga või looja asendab sind robotiga.',
     nextOnline: 'Järgmine voor algab ise.', lastOnline: 'Järgnevad lõpptulemused.', waitHostAgain: 'Ootan, et looja alustaks uue mängu.',
     backToLobby: 'Tagasi ootetuppa', nextTrickSoon: 'Järgmine tihi kohe…', waitingPlayer: 'Ootan mängijat {name}…', playersLbl: 'Kohad',
-    bidS: 'Pakk', wonS: 'Võit', ptsS: 'P',
+    bidS: 'Pakk', wonS: 'Võit', ptsS: 'P', gameLength: 'Mängu pikkus', fullGame: 'Terve mäng', halfGame: 'Pool mängu',
     onFire: 'Hoos: {n} tihti järjest', roundComplete: 'Voor {i} läbi', dealingNext: 'Jagan järgmise vooru…', halfway: 'Pool mängu läbi',
     achievements: 'Saavutused', achUnlocked: 'Saavutus avatud', achOther: 'avas', achLocked: 'Lukus',
     achProgress: '{n} / {t} avatud', achHint: 'Salvestatakse selles seadmes. Robotid neid ei teeni.',
@@ -874,12 +876,13 @@ const BOT_DELAY = 800;
 const ui = {
   screen: 'home', viewer: null, selCard: null, selBid: null, modal: null, bannerTimer: null, botTimer: null,
   bidBubbles: {}, seenRound: null, deal: null,
-  setup: { count: 4, names: ['', '', '', '', '', ''], bots: [false, true, true, true, true, true], order: 'up' }
+  setup: { count: 4, names: ['', '', '', '', '', ''], bots: [false, true, true, true, true, true], order: 'up', half: false }
 };
 if (game && game.names) {
   ui.setup.count = game.names.length;
   game.names.forEach((n, i) => { ui.setup.names[i] = n; ui.setup.bots[i] = !!(game.bots && game.bots[i]); });
   ui.setup.order = game.order;
+  ui.setup.half = !!game.half;
 }
 const isBot = (p) => !!(game && game.bots && game.bots[p]);
 const humans = () => (game ? game.names.map((_, i) => i).filter((i) => !isBot(i)) : []);
@@ -956,8 +959,13 @@ function heroArt() {
     <div class="art-bids"><span>0</span><span>1</span><span class="x">2</span><span class="on">3</span><span>4</span></div>
   </div>`;
 }
+/* Game length picker (offline setup uses action 'half', the host lobby 'oHalf'). */
+const lengthSeg = (action, half) => `<div class="seg">
+  <button type="button" data-a="${action}" data-v="0" aria-pressed="${!half}">${t('fullGame')}</button>
+  <button type="button" data-a="${action}" data-v="1" aria-pressed="${!!half}">${t('halfGame')}</button></div>`;
+const orderLabel = (order, half) => (half ? (order === 'up' ? '1 → max' : 'max → 1') : t(order));
 function setupView() {
-  const s = ui.setup, n = s.count, m = Engine.maxHand(n), r = Engine.buildSchedule(n, s.order).length;
+  const s = ui.setup, n = s.count, m = Engine.maxHand(n), r = Engine.buildSchedule(n, s.order, s.half).length;
   const counts = [3, 4, 5, 6].map((k) => `<button type="button" data-a="count" data-v="${k}" aria-pressed="${k === n}">${k}</button>`).join('');
   const names = Array.from({ length: n }, (_, i) =>
     `<label><span class="seatno num">${i + 1}</span><input id="name-${i}" data-i="${i}" maxlength="16" value="${esc(s.names[i])}" placeholder="${esc(defaultName(i))}">
@@ -970,10 +978,11 @@ function setupView() {
     <form class="panel" id="setupForm">
       <div class="field"><span class="label">${t('players')}</span><div class="seg">${counts}</div></div>
       <div class="field"><div class="names">${names}</div><span class="hint">${t('seatHint')} ${t('seatHintBots')}</span></div>
+      <div class="field"><span class="label">${t('gameLength')}</span>${lengthSeg('half', s.half)}</div>
       <div class="field"><span class="label">${t('roundOrder')}</span>
         <div class="seg">
-          <button type="button" data-a="order" data-v="up" aria-pressed="${s.order === 'up'}">${t('up')}</button>
-          <button type="button" data-a="order" data-v="down" aria-pressed="${s.order === 'down'}">${t('down')}</button>
+          <button type="button" data-a="order" data-v="up" aria-pressed="${s.order === 'up'}">${orderLabel('up', s.half)}</button>
+          <button type="button" data-a="order" data-v="down" aria-pressed="${s.order === 'down'}">${orderLabel('down', s.half)}</button>
         </div>
       </div>
       <div class="row" style="justify-content: space-between">
@@ -1005,11 +1014,11 @@ function topbar() {
     <button class="btn" data-a="menu">${t('menu')}</button>
   </header>`;
 }
-/* After every trick: the winning card pops, the cards stay visible for a moment, then slide into the
-   winner's plate. The game moves on (next trick, or the round summary) the moment the slide ends.
-   Online the whole thing takes 3 s, matching the agreed trick pause; on one device it is quicker. */
+/* After every trick: the winning card pops and the cards slide straight into the winner's plate.
+   The only wait is for the last card to finish landing (its flight takes ~0.4 s).
+   The game moves on (next trick, or the round summary) the moment the slide ends. */
 const COLLECT_MS = 800;
-const trickHold = () => (net.active ? 2200 : 1000);
+const trickHold = () => 420;
 /* ---- Round events seen on screen: new deals and new bids (works the same for host, friends and hotseat) ---- */
 const BUBBLE_MS = 2400, DEAL_FLIGHT = 450, RESULT_MS = 2200;
 /* The round summary window appears once: after the round that completes the first half of the game. */
@@ -1498,6 +1507,7 @@ function hostAct(a, el) {
       net.settings.count = n; break;
     }
     case 'oOrder': net.settings.order = el.dataset.v; break;
+    case 'oHalf': net.settings.half = el.dataset.v === '1'; break;
     case 'oBot': if (S[i] && S[i].kind === 'open') S[i] = { kind: 'bot' }; break;
     case 'oOpen': if (S[i] && S[i].kind === 'bot') S[i] = { kind: 'open' }; break;
     case 'oKick':
@@ -1515,7 +1525,7 @@ function hostAct(a, el) {
     case 'oStart': {
       if (!hostCanStart()) return;
       const names = S.map((s, k) => (s.kind === 'bot' ? 'Bot ' + (k + 1) : s.name));
-      game = Engine.newGame(names, net.settings.order);
+      game = Engine.newGame(names, net.settings.order, net.settings.half);
       game.bots = S.map((s) => s.kind === 'bot');
       net.phase = 'game'; net.mySeat = hostIdx(); ui.viewer = net.mySeat; ui.screen = 'game';
       ui.selBid = null; ui.selCard = null; clearTimers(); break;
@@ -1630,7 +1640,7 @@ function lobbyView() {
       <button class="btn ghost" data-a="leaveOnline">${t('leave')}</button></div>
       <div class="panel"><p class="hint" style="margin:0">${net.everConnected && !net.hostOk ? t('hostLost') : t('connecting')}</p></div></div>`;
   }
-  const n = settings.count, m = Engine.maxHand(n), rounds = Engine.buildSchedule(n, settings.order).length;
+  const n = settings.count, m = Engine.maxHand(n), rounds = Engine.buildSchedule(n, settings.order, settings.half).length;
   const rows = seats.map((s, i) => {
     const me = i === net.mySeat;
     let chip;
@@ -1652,8 +1662,9 @@ function lobbyView() {
   }).join('');
   const settingsHTML = host
     ? `<div class="row" style="gap:18px"><div class="field"><span class="label">${t('players')}</span><div class="seg">${[3, 4, 5, 6].map((k) => `<button type="button" data-a="oCount" data-v="${k}" aria-pressed="${k === n}">${k}</button>`).join('')}</div></div>
-       <div class="field"><span class="label">${t('roundOrder')}</span><div class="seg"><button type="button" data-a="oOrder" data-v="up" aria-pressed="${settings.order === 'up'}">${t('up')}</button><button type="button" data-a="oOrder" data-v="down" aria-pressed="${settings.order === 'down'}">${t('down')}</button></div></div></div>`
-    : `<div class="hint">${settings.order === 'up' ? t('up') : t('down')}</div>`;
+       <div class="field"><span class="label">${t('gameLength')}</span>${lengthSeg('oHalf', settings.half)}</div>
+       <div class="field"><span class="label">${t('roundOrder')}</span><div class="seg"><button type="button" data-a="oOrder" data-v="up" aria-pressed="${settings.order === 'up'}">${orderLabel('up', settings.half)}</button><button type="button" data-a="oOrder" data-v="down" aria-pressed="${settings.order === 'down'}">${orderLabel('down', settings.half)}</button></div></div></div>`
+    : `<div class="hint">${settings.half ? t('halfGame') : t('fullGame')} · ${orderLabel(settings.order, settings.half)}</div>`;
   let foot;
   if (host) {
     const full = net.seats.every((s) => s.kind !== 'open');
@@ -1946,9 +1957,9 @@ function botStep() {
   else return;
   afterChange(); render();
 }
-function startGame(names, order, bots) {
+function startGame(names, order, bots, half) {
   clearTimers();
-  game = Engine.newGame(names, order);
+  game = Engine.newGame(names, order, half);
   game.bots = bots.slice(0, names.length);
   ui.screen = 'game'; resetViewer(); ui.selBid = null; ui.selCard = null; ui.modal = null;
   save(); render();
@@ -2006,6 +2017,7 @@ function act(a, el) {
       clearTimers(); game = null; store.del(SAVE_KEY); ui.modal = null; ui.screen = 'setup'; break;
     case 'count': ui.setup.count = +el.dataset.v; break;
     case 'order': ui.setup.order = el.dataset.v; break;
+    case 'half': ui.setup.half = el.dataset.v === '1'; break;
     case 'kind': ui.setup.bots[+el.dataset.i] = el.dataset.v === '1'; break;
     case 'reveal': ui.viewer = game.round.turn; ui.selBid = null; ui.selCard = null; break;
     case 'bid': {
@@ -2037,7 +2049,7 @@ function act(a, el) {
     case 'skipBanner': if (net.active) return; advanceRound(); return;
     case 'playAgain':
       if (net.active) { if (net.isHost) hostAct('oBackLobby'); return; }
-      startGame(game.names, game.order, game.bots || []); return;
+      startGame(game.names, game.order, game.bots || [], game.half); return;
     case 'mainMenu':
       if (net.active) { if (net.isHost) { hostAct('oEnd'); return; } clientLeave(); break; }
       clearTimers(); store.del(SAVE_KEY); game = null; ui.screen = 'home'; break;
@@ -2063,7 +2075,7 @@ document.addEventListener('input', (e) => {
 document.addEventListener('submit', (e) => {
   if (e.target.id !== 'setupForm') return;
   e.preventDefault();
-  startGame(playerNames(), ui.setup.order, ui.setup.bots);
+  startGame(playerNames(), ui.setup.order, ui.setup.bots, ui.setup.half);
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && ui.modal) { act('closeModal'); return; }
